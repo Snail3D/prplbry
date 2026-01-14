@@ -1987,8 +1987,12 @@
         async function copyPRD() {
             try {
                 await navigator.clipboard.writeText(prdEditor.value);
-                // Track PRD copy (once per IP)
-                fetch('/api/prd/count', { method: 'POST' }).catch(() => {});
+                // Track PRD copy (once per session)
+                fetch('/api/prd/count', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ session_id: sessionId })
+                }).catch(() => {});
                 // Visual feedback
                 const btn = document.querySelector('.header-btn');
                 const originalText = btn.textContent;
@@ -2105,7 +2109,7 @@
             // Load saved settings from localStorage
             const savedProvider = localStorage.getItem('modelProvider') || 'ollama';
             const savedModel = localStorage.getItem('modelName') || '';
-            const savedApiKey = localStorage.getItem('grokApiKey') || '';
+            const savedApiKey = sessionStorage.getItem('grokApiKey') || '';
 
             currentModel = savedModel;
             grokApiKey = savedApiKey;
@@ -2234,7 +2238,7 @@
             const apiKey = document.getElementById('grokApiKeyInput').value;
             const model = document.getElementById('grokModelInput').value;
 
-            localStorage.setItem('grokApiKey', apiKey);
+            sessionStorage.setItem('grokApiKey', apiKey);
             localStorage.setItem('modelName', model);
             localStorage.setItem('modelProvider', 'grok');
 
@@ -2548,7 +2552,7 @@
                 if (data.success) {
                     // Save GLM API key for future use
                     if (launchCloudProvider === 'glm' && glmApiKey) {
-                        localStorage.setItem('glmApiKey', glmApiKey);
+                        sessionStorage.setItem('glmApiKey', glmApiKey);
                     }
                     // Save folder paths
                     localStorage.setItem('lastLaunchFolder', folder);
@@ -2641,7 +2645,7 @@
                 if (data.success) {
                     // Save GLM API key for future use
                     if (launchCloudProvider === 'glm' && glmApiKey) {
-                        localStorage.setItem('glmApiKey', glmApiKey);
+                        sessionStorage.setItem('glmApiKey', glmApiKey);
                     }
 
                     // Show script modal with preview
@@ -2800,7 +2804,7 @@
 
         // Load saved GLM API key
         function loadSavedApiKey() {
-            const savedKey = localStorage.getItem('glmApiKey');
+            const savedKey = sessionStorage.getItem('glmApiKey');
             if (savedKey) {
                 document.getElementById('glmApiKey').value = savedKey;
             }

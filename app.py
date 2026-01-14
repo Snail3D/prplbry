@@ -301,12 +301,12 @@ def unlock_session(session_id: str) -> dict:
 
 
 # ============================================================================
-# PRD COPY COUNTER (Track PRDs created, once per IP)
+# PRD COPY COUNTER (Track PRDs created, once per session)
 # ============================================================================
 
 COUNTER_FILE = Path(__file__).parent / 'prd_counter.txt'
-# Track IPs that have already copied (in-memory, resets on restart)
-copied_ips = set()
+# Track sessions that have already copied (in-memory, resets on restart)
+copied_sessions = set()
 
 def get_prd_count() -> int:
     """Get current PRD copy count from file."""
@@ -317,13 +317,16 @@ def get_prd_count() -> int:
         pass
     return 0
 
-def increment_prd_count(ip: str) -> int:
-    """Increment PRD count if this IP hasn't copied yet."""
-    if ip in copied_ips:
+def increment_prd_count(session_id: str) -> int:
+    """
+    Increment PRD count if this session hasn't copied yet.
+    Uses session_id instead of IP to support mobile users with changing IPs.
+    """
+    if session_id in copied_sessions:
         return get_prd_count()
 
-    # Add IP to tracking set
-    copied_ips.add(ip)
+    # Add session to tracking set
+    copied_sessions.add(session_id)
 
     # Read current count
     current = get_prd_count()
@@ -806,8 +809,14 @@ def api_session_status():
 @app.route('/api/prd/count', methods=['POST'])
 def api_prd_count():
     """
-    Track PRD copy (one per IP).
+    Track PRD copy (one per session).
     Call this when user copies the PRD.
+    Uses session_id to support mobile users with changing IPs.
+
+    Expects:
+    {
+        "session_id": "uuid"
+    }
 
     Returns:
     {
@@ -816,8 +825,13 @@ def api_prd_count():
     }
     """
     try:
-        ip = get_remote_address()
-        new_count = increment_prd_count(ip)
+        data = request.get_json()
+        session_id = data.get('session_id', '')
+
+        if not session_id:
+            return jsonify({"error": "Session ID required"}), 400
+
+        new_count = increment_prd_count(session_id)
         return jsonify({"success": True, "count": new_count})
     except Exception as e:
         logger.exception("PRD count error")
