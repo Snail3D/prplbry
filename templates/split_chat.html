@@ -92,8 +92,22 @@
         .chat-title {
             font-size: 13px;
             font-weight: 500;
-            color: var(--text-primary);
             letter-spacing: -0.3px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .chat-title .logo {
+            font-size: 14px;
+        }
+
+        .chat-title .prpl {
+            color: #a855f7;
+        }
+
+        .chat-title .berry {
+            color: #888;
         }
 
         /* Toggle Switch */
@@ -616,7 +630,10 @@
     <!-- Chat Section -->
     <div class="chat-section">
         <div class="chat-header">
-            <div class="chat-title">prplbry</div>
+            <div class="chat-title">
+                <span class="logo">🫐</span>
+                <span class="prpl">prpl</span><span class="berry">bry</span>
+            </div>
             <div class="mode-toggle" onclick="toggleMode()" id="modeBtn"></div>
         </div>
 
