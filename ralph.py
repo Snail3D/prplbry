@@ -843,19 +843,75 @@ Include: project purpose, tech stack, features, aesthetics, constraints. Be thor
             prd_preview = self._update_prd_display()
             return response, suggestions, prd_preview
 
-        # Step 5: Got aesthetics - move to constraints
+        # Step 5: Got aesthetics - move to constraints, OR keep capturing more features
         elif step == 5:
             # Store aesthetics info
             state["aesthetics"] = message
-            state["step"] = 6
 
+            # Check if user is giving more features/details
+            feature_keywords = ["feature", "add", "include", "want", "need", "should", "also", "and", "multiplayer", "ui", "design"]
+            if any(kw in message_lower for kw in feature_keywords) and len(message) > 20:
+                # User is still describing features - add them!
+                new_task_id = len(state["prd"]["p"]["02_core"]["t"]) + 100
+                state["prd"]["p"]["02_core"]["t"].append({
+                    "id": f"CORE-{new_task_id}",
+                    "ti": message[:50] + ("..." if len(message) > 50 else ""),
+                    "d": message,
+                    "f": "core.py",
+                    "pr": "high"
+                })
+
+                total_tasks = sum(len(cat["t"]) for cat in state["prd"]["p"].values())
+
+                # Varied responses
+                responses = [
+                    f"*eyes light up* Oh hot dog! {self._get_salutation()} Worms, this is getting spicy! Keep going!\n\nTotal tasks: {total_tasks}. What else?",
+                    f"*leans forward* {self._get_ralph_idiom()}! Love it, love it! We're cooking with gas now!\n\nTotal tasks: {total_tasks}. What else you got?",
+                    f"*rubs hands together* Excellent! This is gonna be good, {self._get_salutation()} Worms! \n\n{self._get_computer_ref()}\n\nTotal tasks: {total_tasks}. More?",
+                    f"*nods enthusiastically* Yes! Yes! That's the stuff! \n\nTotal tasks: {total_tasks}. What else?",
+                    f"*adjusts tie excitedly* {self._get_ralph_idiom()}! We're really building something here!\n\nTotal tasks: {total_tasks}. Keep 'em coming!",
+                ]
+                response = random.choice(responses)
+
+                prd_preview = self._update_prd_display()
+                return response, suggestions, prd_preview
+
+            # Otherwise move to constraints
+            state["step"] = 6
             response = f"Noted. {message[:100]}...\n\nAny constraints or deadlines?"
 
             prd_preview = self._update_prd_display()
             return response, suggestions, prd_preview
 
-        # Step 6: Got constraints - finalize
+        # Step 6: Got constraints - OR keep capturing features
         elif step == 6:
+            # Check if user is still adding features
+            feature_keywords = ["feature", "add", "include", "want", "need", "should", "also", "and", "multiplayer", "design", "interface"]
+            if any(kw in message_lower for kw in feature_keywords) and len(message) > 20:
+                # Still adding features - don't move forward yet
+                new_task_id = len(state["prd"]["p"]["02_core"]["t"]) + 100
+                state["prd"]["p"]["02_core"]["t"].append({
+                    "id": f"CORE-{new_task_id}",
+                    "ti": message[:50] + ("..." if len(message) > 50 else ""),
+                    "d": message,
+                    "f": "core.py",
+                    "pr": "high"
+                })
+
+                total_tasks = sum(len(cat["t"]) for cat in state["prd"]["p"].values())
+
+                responses = [
+                    f"*scribbles furiously* {self._get_ralph_idiom()}! Added it! \n\n{self._get_computer_ref()}\n\nTotal tasks: {total_tasks}. What else?",
+                    f"*types rapidly* Oh yes! This is coming together, {self._get_salutation()} Worms!\n\nTotal tasks: {total_tasks}. More?",
+                    f"*eyes wide* Brilliant! Absolutely brilliant! \n\nTotal tasks: {total_tasks}. Keep going!",
+                    f"*nods approvingly* Love where this is going! Hot dog!\n\nTotal tasks: {total_tasks}. What else?",
+                ]
+                response = random.choice(responses)
+
+                prd_preview = self._update_prd_display()
+                return response, suggestions, prd_preview
+
+            # Actual constraint - store it
             state["constraints"].append(message)
 
             # Add security tasks
@@ -878,8 +934,36 @@ Include: project purpose, tech stack, features, aesthetics, constraints. Be thor
             prd_preview = self._update_prd_display()
             return response, suggestions, prd_preview
 
-        # Step 7: Generate full PRD
+        # Step 7: Generate full PRD - OR keep capturing more features
         elif step == 7:
+            # Check if user is still adding features (common pattern!)
+            feature_keywords = ["feature", "add", "include", "want", "need", "should", "also", "and", "multiplayer", "design", "interface", "sound", "animation", "vibe"]
+            if any(kw in message_lower for kw in feature_keywords) and len(message) > 20 and "generate" not in message_lower:
+                # Still in feature-capture mode
+                new_task_id = len(state["prd"]["p"]["02_core"]["t"]) + 100
+                state["prd"]["p"]["02_core"]["t"].append({
+                    "id": f"CORE-{new_task_id}",
+                    "ti": message[:50] + ("..." if len(message) > 50 else ""),
+                    "d": message,
+                    "f": "core.py",
+                    "pr": "high"
+                })
+
+                total_tasks = sum(len(cat["t"]) for cat in state["prd"]["p"].values())
+
+                responses = [
+                    f"*eyes widen* {self._get_ralph_idiom()}! Yes, yes, YES! That's exactly what we need!\n\nTotal tasks: {total_tasks}. \n\nSay 'ready' when you're done adding features, or keep 'em coming!",
+                    f"*types with one finger* Oh you're on fire today, {self._get_salutation()} Worms! \n\n{self._get_computer_ref()}\n\nTotal tasks: {total_tasks}. What else?",
+                    f"*grins broadly* This is gonna be amazing! Hot dog! \n\nTotal tasks: {total_tasks}. Keep going or say 'ready' to generate!",
+                    f"*nods vigorously* Absolutely! Adding it now! \n\nTotal tasks: {total_tasks}. More features or ready to roll?",
+                    f"*leans back* {self._get_ralph_idiom()}! We're building something special here! \n\nTotal tasks: {total_tasks}. What else you got?",
+                ]
+                response = random.choice(responses)
+
+                prd_preview = self._update_prd_display()
+                return response, suggestions, prd_preview
+
+            # Ready to generate
             if action == "generate_prd" or "generate" in message_lower or "yes" in message_lower or "ready" in message_lower:
                 try:
                     # Deep summarize before generating (only once!)
@@ -909,7 +993,16 @@ Include: project purpose, tech stack, features, aesthetics, constraints. Be thor
                     response = f"Error: {str(e)}\n\nTry again?"
                     return response, suggestions, None
             else:
-                response = f"*nods* Of course, {self._get_salutation()} Worms! What else?"
+                total_tasks = sum(len(cat["t"]) for cat in state["prd"]["p"].values())
+
+                responses = [
+                    f"*listens closely* I hear you, {self._get_salutation()} Worms. Should I add that as a feature, or are you ready to generate the PRD? \n\n(Currently have {total_tasks} tasks)",
+                    f"*raises eyebrow* Interesting... Want me to note that down, or shall we finalize this PRD? \n\n(Total tasks so far: {total_tasks})",
+                    f"*taps chin* Hmm, good point. Should that go in the PRD, or are we good to generate? \n\n(We've got {total_tasks} tasks ready)",
+                    f"*looks thoughtful* {self._get_ralph_idiom()}! Should I capture that, or are you ready to roll? \n\n(Tasks: {total_tasks})",
+                ]
+                response = random.choice(responses)
+
                 prd_preview = self._update_prd_display()
                 return response, suggestions, prd_preview
 
