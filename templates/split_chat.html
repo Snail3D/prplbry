@@ -1802,9 +1802,9 @@
                     updatePRDTitle(data.prd_title);
                 }
 
-                // Handle limit reached
-                if (data.limit_reached) {
-                    showPaymentPrompt(data);
+                // Handle donation prompt (Ralph asks at the right time)
+                if (data.donation_prompt && donationRefusals < MAX_DONATION_REQUESTS) {
+                    showDonationPrompt(data.donation_message);
                 }
 
             } catch (error) {
@@ -1813,14 +1813,75 @@
             }
         }
 
+        function showDonationPrompt(message) {
+            const modal = document.createElement('div');
+            modal.id = 'donationModal';
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0,0,0,0.9);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 9999;
+            `;
+
+            modal.innerHTML = `
+                <div style="
+                    background: #0a0a0a;
+                    border: 1px solid #333;
+                    border-radius: 8px;
+                    padding: 40px;
+                    max-width: 500px;
+                    text-align: center;
+                ">
+                    <h2 style="color: #ff6b35; margin-bottom: 16px;">Hot dog! Look at you go! 🚀</h2>
+                    <p style="color: #e0e0e0; line-height: 1.6; margin-bottom: 24px; white-space: pre-line;">${message}</p>
+                    <div style="display: flex; gap: 12px; flex-direction: column;">
+                        <button onclick="donateYes()" style="
+                            padding: 14px 24px;
+                            background: #4ade80;
+                            color: #000;
+                            border: none;
+                            border-radius: 6px;
+                            cursor: pointer;
+                            font-size: 14px;
+                            font-weight: 600;
+                        ">🔥 Heck yeah!</button>
+                        <button onclick="donateNo()" style="
+                            padding: 14px 24px;
+                            background: #2a2a2a;
+                            color: #e0e0e0;
+                            border: 1px solid #444;
+                            border-radius: 6px;
+                            cursor: pointer;
+                            font-size: 14px;
+                        ">Nah, maybe next time</button>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+        }
+
+        function donateYes() {
+            document.getElementById('donationModal').remove();
+            window.open('https://buymeacoffee.com/snail3d', '_blank');
+            addMessage('assistant', '*adjusts tie*\n\nWell I\'ll be! Homer\'s gonna be thrilled! You\'re the real deal, {salutation} Worms. Much obliged! 🙏\n\nMmm... coffee... ☕');
+        }
+
+        function donateNo() {
+            document.getElementById('donationModal').remove();
+            donationRefusals++;
+            addMessage('assistant', '*nods slowly*\n\nNo sweat at all, {salutation} Worms! You just keep building great stuff. That\'s what matters around here! 👍');
+        }
+
         function updateTaskCounter(data) {
-            if (data.is_paid) {
-                // Paid user - show unlimited
-                updateTaskDisplay('✓ Unlimited', data.task_count, true);
-            } else if (data.tasks_remaining !== undefined) {
-                // Free user - show remaining
-                updateTaskDisplay(`${data.tasks_remaining} left`, data.task_count, false);
-            }
+            // No more task limits, just show count
+            updateTaskDisplay(`${data.task_count} tasks`, data.task_count, false);
         }
 
         function updateTaskDisplay(label, count, isPaid) {
@@ -2075,6 +2136,8 @@
         let currentProvider = 'ollama';
         let currentModel = '';
         let grokApiKey = '';
+        let donationRefusals = 0;  // Track how many times they've said no
+        const MAX_DONATION_REQUESTS = 2;  // Stop asking after 2 refusals
 
         function showSettingsModal() {
             document.getElementById('settingsModal').classList.add('active');

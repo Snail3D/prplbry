@@ -591,54 +591,14 @@ def api_chat():
             chat = ralph.get_chat_session(str(uuid.uuid4()))
             session_id = chat.session_id
 
-        # Check if this is adding a task (simple heuristic: message with actionable content)
-        is_task_addition = (
-            message and
-            action not in ['generate_prd', 'auto_summarize'] and
-            not suggestion_id and
-            not vote and
-            not gender_toggle and
-            len(message) > 10  # Substantial message
-        )
-
-        # Check task limits for free users
+        # Get session info (no limits, just tracking)
         session_info = get_session(session_id)
         task_count = session_info['task_count']
-        is_paid = session_info['is_paid']
 
-        if is_task_addition and not is_paid:
-            can_add, session_info = can_add_task(session_id)
-            if not can_add:
-                # Hit the free limit!
-                return jsonify({
-                    "success": True,
-                    "session_id": session_id,
-                    "message": f"""**Whoa, you've reached the end of the free limit!** 🎯
-
-You've added {FREE_TASK_LIMIT} tasks to your PRD. Not bad!
-
-**You have two options:**
-
-1. **Create your PRD now** - Click "Generate PRD" to finalize and start building
-
-2. **Unlock unlimited** - Pay ${UNLOCK_PRICE:.2f} to keep adding as many tasks as you want
-
-Your PRD is ready when you are! 🚀""",
-                    "actions": [],
-                    "suggestions": [],
-                    "prd_preview": chat.get_prd() and ralph.compress_prd(chat.get_prd()),
-                    "backroom": None,
-                    "has_prd": chat.get_prd() is not None,
-                    "limit_reached": True,
-                    "task_count": task_count,
-                    "is_paid": False,
-                    "unlock_price": UNLOCK_PRICE
-                })
-
-            # Increment task counter
-            if is_task_addition:
-                increment_task_count(session_id)
-                task_count = session_info['task_count']
+        # Track task additions (for display only, no limits)
+        if message and action not in ['generate_prd', 'auto_summarize'] and not suggestion_id and not vote and not gender_toggle and len(message) > 10:
+            increment_task_count(session_id)
+            task_count = session_info['task_count']
 
         # Process message/action and get response
         # Ralph returns: (response, suggestions, prd_preview, backroom)
@@ -676,9 +636,9 @@ Your PRD is ready when you are! 🚀""",
             "backroom": backroom,
             "has_prd": chat.get_prd() is not None,
             "task_count": task_count,
-            "is_paid": is_paid,
-            "tasks_remaining": max(0, FREE_TASK_LIMIT - task_count) if not is_paid else None,
-            "prd_title": chat.generate_prd_title()  # Short 2-3 word title after step 4+
+            "prd_title": chat.generate_prd_title(),  # Short 2-3 word title after step 4+
+            "donation_prompt": "DONATION_REQUEST" in response_text,  # Trigger donation modal
+            "donation_message": response_text.split("DONATION_REQUEST")[-1].strip() if "DONATION_REQUEST" in response_text else None
         })
 
     except Exception as e:
