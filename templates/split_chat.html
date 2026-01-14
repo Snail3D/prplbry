@@ -328,6 +328,47 @@
             color: var(--text-primary);
         }
 
+        /* Privacy Modal */
+        .privacy-link {
+            font-size: 11px;
+            color: var(--text-secondary);
+            text-decoration: underline;
+            cursor: pointer;
+            margin-top: 12px;
+            display: inline-block;
+        }
+
+        .privacy-link:hover {
+            color: var(--text-primary);
+        }
+
+        .privacy-content {
+            font-size: 12px;
+            color: var(--text-primary);
+            line-height: 1.8;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        .privacy-content h4 {
+            font-size: 14px;
+            color: var(--accent);
+            margin: 16px 0 8px 0;
+        }
+
+        .privacy-content p {
+            margin-bottom: 12px;
+        }
+
+        .privacy-content ul {
+            margin-left: 20px;
+            margin-bottom: 12px;
+        }
+
+        .privacy-content li {
+            margin-bottom: 8px;
+        }
+
         /* Scrollbar */
         ::-webkit-scrollbar {
             width: 6px;
@@ -355,6 +396,40 @@
             <p>Enter your free Groq API key to continue. Get it at console.groq.com</p>
             <input type="password" class="api-input" id="apiKeyInput" placeholder="gsk_...">
             <button class="modal-btn" onclick="saveApiKey()">Start</button>
+            <span class="privacy-link" onclick="showPrivacy()">Privacy (we collect nothing)</span>
+        </div>
+    </div>
+
+    <!-- Privacy Modal -->
+    <div class="modal-overlay" id="privacyModal">
+        <div class="modal">
+            <h3>🔒 Privacy (Super Simple)</h3>
+            <div class="privacy-content">
+                <h4>What we DON'T collect:</h4>
+                <ul>
+                    <li><strong>No names</strong> - We don't know who you are</li>
+                    <li><strong>No emails</strong> - We can't email you</li>
+                    <li><strong>No accounts</strong> - You don't sign up for anything</li>
+                    <li><strong>No tracking</strong> - We don't follow you around</li>
+                    <li><strong>No cookies</strong> - Well, just one tiny cookie to keep your chat working, but it disappears when you close your browser</li>
+                    <li><strong>No selling your stuff</strong> - We have nothing to sell!</li>
+                </ul>
+
+                <h4>What DO we do with your stuff?</h4>
+                <p>Nothing! Your chat messages and PRDs are gone as soon as you close the tab. We don't save them. We can't even see them.</p>
+
+                <h4>So how does this work?</h4>
+                <p>You bring your own Groq API key. That key talks directly to Groq. Your messages go from your computer to Groq and back. We're just the middleman who sets up the conversation.</p>
+
+                <p><strong>We're like a paper cup - you use it, then it's gone. We keep nothing.</strong></p>
+
+                <h4>Why?</h4>
+                <p>Because privacy should be simple. No fine print. No tricks. Just nothing.</p>
+
+                <h4>The boring part:</h4>
+                <p>We use Cloudflare to keep the site fast and safe from bad guys. That's it.</p>
+            </div>
+            <button class="modal-btn" onclick="closePrivacy()" style="margin-top: 16px;">Got it</button>
         </div>
     </div>
 
@@ -492,8 +567,8 @@
                     document.getElementById('prdTitle').textContent = data.prd_title;
                 }
 
-                // Donation prompt
-                if (data.donation_prompt && donationRefusals < MAX_DONATION_REQUESTS) {
+                // Donation prompt (only if they haven't said no even once)
+                if (data.donation_prompt && donationRefusals === 0) {
                     showDonationPrompt(data.donation_message);
                 }
 
@@ -548,6 +623,14 @@
             document.getElementById('donationModal').classList.remove('active');
             donationRefusals++;
             addMessage('assistant', '*nods slowly*\n\nNo sweat at all! You just keep building great stuff. That\'s what matters around here!');
+        }
+
+        function showPrivacy() {
+            document.getElementById('privacyModal').classList.add('active');
+        }
+
+        function closePrivacy() {
+            document.getElementById('privacyModal').classList.remove('active');
         }
 
         async function loadChatHistory() {
