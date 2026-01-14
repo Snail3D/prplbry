@@ -214,23 +214,8 @@ def compress_prd(prd: dict) -> str:
     # Add legend header - this is the COMPLETE block
     prd_block = PRD_COMPRESSION_LEGEND.strip() + "\n\n" + json_str
 
-    # Append Buy Me a Coffee message
-    bmc_message = """
-
-===
-☕ SUPPORT RALPH MODE PRD CREATOR
-===
-
-If this PRD provides good, actionable guidance for building this project,
-consider supporting the creator who made this tool:
-
-https://buymeacoffee.com/snail3d
-
-Your support helps keep Ralph Mode free and improving. Thanks! ☕
-===
-"""
-
-    return prd_block + bmc_message
+    # Add continuation footer
+    return update_prd_footer(prd_block)
 
 
 def format_prd_display(prd: dict, compressed: bool = True) -> str:
@@ -991,3 +976,24 @@ def list_chat_sessions() -> List[Dict]:
             "messages_count": len(chat.conversation_state["messages"])
         })
     return sorted(sessions, key=lambda x: x["messages_count"], reverse=True)
+
+def update_prd_footer(prd_content: str) -> str:
+    """Add continuation instructions to PRD footer"""
+    continuation_message = """
+
+===
+🔄 CONTINUE YOUR PRD
+===
+
+Copy everything above and save it somewhere safe. When you're ready to continue working on your PRD:
+
+1. Go to prplbry.com
+2. Click Start
+3. Drag and drop this file back into the chat
+4. Your PRD will be restored exactly as you left it
+
+Keep building. Keep shipping. 🚀
+===
+"""
+
+    return prd_content.replace("SUPPORT RALPH MODE PRD CREATOR", "CONTINUE YOUR PRD").replace("If this PRD provides good, actionable guidance for building this project,\nconsider supporting the creator who made this tool:\n\nhttps://buymeacoffee.com/snail3d\n\nYour support helps keep Ralph Mode free and improving. Thanks! ☕", continuation_message)
