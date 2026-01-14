@@ -1999,3 +1999,38 @@ if __name__ == '__main__':
     print()
 
     app.run(host='0.0.0.0', port=8000, debug=DEBUG)
+
+# ============================================================================
+# SESSION CLEANUP (Complete Ephemerality)
+# ============================================================================
+
+def cleanup_old_sessions():
+    """Remove sessions older than 1 hour."""
+    cutoff = datetime.utcnow() - timedelta(hours=1)
+    to_delete = []
+
+    for session_id, session in sessions.items():
+        if session['created_at'] < cutoff:
+            to_delete.append(session_id)
+
+    for session_id in to_delete:
+        del sessions[session_id]
+        # Also cleanup from Ralph's sessions
+        if session_id in ralph._sessions:
+            del ralph._sessions[session_id]
+
+    logger.info(f"Cleaned up {len(to_delete)} old sessions")
+
+# Run cleanup every 30 minutes
+import threading
+def cleanup_worker():
+    while True:
+        try:
+            cleanup_old_sessions()
+            threading.Event().wait(1800)  # 30 minutes
+        except Exception as e:
+            logger.error(f"Cleanup error: {e}")
+            threading.Event().wait(60)
+
+cleanup_thread = threading.Thread(target=cleanup_worker, daemon=True)
+cleanup_thread.start()
