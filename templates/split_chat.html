@@ -879,6 +879,44 @@
             font-size: 12px;
         }
 
+        /* Claude Dangerously Run Mode Footer */
+        .danger-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #0a0a0a;
+            border-top: 1px solid #1a1a1a;
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            z-index: 900;
+        }
+
+        .danger-code {
+            background: #1a1a1a;
+            border: 1px solid #ff6b35;
+            color: #ff6b35;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-family: 'SF Mono', 'Monaco', monospace;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .danger-code:hover {
+            background: #ff6b35;
+            color: #fff;
+        }
+
+        .danger-label {
+            color: #404040;
+            font-size: 11px;
+        }
+
         .service-name {
             flex: 1;
             color: #aaa;
@@ -2664,6 +2702,34 @@
             }
         }
 
+        // Claude Dangerously Run Mode
+        function copyDangerCode() {
+            const code = document.getElementById('dangerCode').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                const el = document.getElementById('dangerCode');
+                const originalText = el.textContent;
+                el.textContent = '✓ Copied!';
+                el.style.background = '#4ade80';
+                el.style.color = '#000';
+                setTimeout(() => {
+                    el.textContent = originalText;
+                    el.style.background = '#1a1a1a';
+                    el.style.color = '#ff6b35';
+                }, 1500);
+            }).catch(err => {
+                console.error('Copy failed:', err);
+            });
+        }
+
+        // Groq API Key Modal
+        function showGroqModal() {
+            document.getElementById('groqModal').classList.add('active');
+        }
+
+        function hideGroqModal() {
+            document.getElementById('groqModal').classList.remove('active');
+        }
+
         // Drag and drop for folders
         function setupDragDrop(dropZoneId, inputId) {
             const dropZone = document.getElementById(dropZoneId);
@@ -2978,5 +3044,38 @@
             </div>
         </div>
     </div>
+
+    <!-- Claude Dangerously Run Mode Footer -->
+    <div class="danger-footer">
+        <code class="danger-code" id="dangerCode" onclick="copyDangerCode()">claude --skip-dangerously</code>
+        <span class="danger-label">Claude Dangerously Run Mode</span>
+    </div>
+
+    <!-- Groq API Key Help Modal -->
+    <div class="modal-overlay" id="groqModal">
+        <div class="modal" style="max-width: 500px;">
+            <h3>🔑 Get Your Free Groq API Key</h3>
+            <p style="color: #888; font-size: 13px; margin-bottom: 20px;">
+                prplbry uses Groq's free API for AI. Get your key in 30 seconds:
+            </p>
+
+            <div style="background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+                <ol style="color: #a0a0a0; font-size: 13px; line-height: 1.8; padding-left: 20px;">
+                    <li>Go to <a href="https://groq.com" target="_blank" style="color: #4ade80;">groq.com</a></li>
+                    <li>Sign up for free account</li>
+                    <li>Go to <strong>API Keys</strong> in dashboard</li>
+                    <li>Click <strong>Create API Key</strong></li>
+                    <li>Copy the key (starts with <code>gsk_</code>)</li>
+                    <li>Paste it below and you're ready!</li>
+                </ol>
+            </div>
+
+            <div class="modal-buttons">
+                <button class="modal-btn cancel" onclick="hideGroqModal()">Close</button>
+                <a href="https://groq.com" target="_blank" class="modal-btn confirm" style="background: #4ade80; text-decoration: none; display: inline-block;">Go to Groq →</a>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>
