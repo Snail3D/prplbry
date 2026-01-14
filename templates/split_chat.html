@@ -837,6 +837,48 @@
             font-size: 14px;
         }
 
+        /* Drag & Drop Zone */
+        .drop-zone-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(10, 10, 10, 0.95);
+            border: 2px dashed #ff6b35;
+            border-radius: 8px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            margin: 8px;
+        }
+
+        .drop-zone-overlay.active {
+            display: flex;
+        }
+
+        .drop-zone-content {
+            text-align: center;
+        }
+
+        .drop-zone-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .drop-zone-text {
+            color: #e0e0e0;
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .drop-zone-subtext {
+            color: #606060;
+            font-size: 12px;
+        }
+
         .service-name {
             flex: 1;
             color: #aaa;
@@ -1310,6 +1352,15 @@
                 </div>
             </div>
 
+            <!-- Drag & Drop Zone (hidden by default, shows on file drag) -->
+            <div class="drop-zone-overlay" id="dropZoneOverlay">
+                <div class="drop-zone-content">
+                    <div class="drop-zone-icon">📄</div>
+                    <div class="drop-zone-text">Drop your PRD to continue working</div>
+                    <div class="drop-zone-subtext">Supports: .txt, .json, .md</div>
+                </div>
+            </div>
+
             <div class="messages-container" id="messagesContainer">
                 {% if not messages %}
                 <div class="welcome-screen">
@@ -1426,7 +1477,73 @@
         const sendBtn = document.getElementById('sendBtn');
         const prdEditor = document.getElementById('prdEditor');
         const prdPlaceholder = document.getElementById('prdPlaceholder');
+        const dropZoneOverlay = document.getElementById('dropZoneOverlay');
         let sessionId = '{{ session_id or "" }}';
+
+        // Drag & Drop PRD Upload
+        const chatPanel = document.querySelector('.chat-panel');
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            document.body.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        // Show drop zone on file drag
+        document.body.addEventListener('dragenter', (e) => {
+            if (e.dataTransfer.types.includes('Files')) {
+                dropZoneOverlay.classList.add('active');
+            }
+        });
+
+        document.body.addEventListener('dragleave', (e) => {
+            if (e.target === dropZoneOverlay) {
+                dropZoneOverlay.classList.remove('active');
+            }
+        });
+
+        // Handle file drop
+        document.body.addEventListener('drop', async (e) => {
+            dropZoneOverlay.classList.remove('active');
+
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                const file = files[0];
+                await handlePRDUpload(file);
+            }
+        });
+
+        async function handlePRDUpload(file) {
+            try {
+                const text = await file.text();
+
+                // Send PRD to server for restoration
+                const response = await fetch('/api/prd/restore', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        session_id: sessionId,
+                        prd_content: text,
+                        filename: file.name
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Reload page with restored session
+                    window.location.href = `/chat/${data.session_id}`;
+                } else {
+                    alert('Failed to restore PRD: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Upload error:', error);
+                alert('Failed to read file. Please try again.');
+            }
+        }
 
         // Auto-resize textarea
         function autoResize(textarea) {

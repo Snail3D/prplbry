@@ -764,7 +764,93 @@ def api_session_status():
 
 
 # ============================================================================
-# SAVE/LOAD CONVERSATION API
+# PRD RESTORE API (Drag & Drop)
+# ============================================================================
+
+@app.route('/api/prd/restore', methods=['POST'])
+def api_restore_prd():
+    """
+    Restore a PRD from uploaded file (drag & drop).
+
+    Expects:
+    {
+        "session_id": "uuid",
+        "prd_content": "PRD JSON or text content",
+        "filename": "original-filename.txt"
+    }
+
+    Returns:
+    {
+        "success": true,
+        "session_id": "uuid",
+        "restored": true,
+        "was_paid": false
+    }
+    """
+    try:
+        data = request.get_json()
+        session_id = data.get('session_id', '')
+        prd_content = data.get('prd_content', '')
+
+        if not prd_content:
+            return jsonify({"error": "PRD content is required"}), 400
+
+        # Check if PRD contains payment marker (to restore paid status)
+        was_paid = False
+        if 'UNLOCKED_SESSION' in prd_content or 'PAID_SESSION' in prd_content:
+            was_paid = True
+
+        # Create or get session
+        if not session_id:
+            session_id = str(uuid.uuid4())
+
+        session = get_session(session_id)
+
+        # Restore payment status if previously paid
+        if was_paid:
+            session['is_paid'] = True
+
+        # Parse PRD content and restore to chat session
+        try:
+            # Try to parse as JSON first
+            if prd_content.strip().startswith('{'):
+                prd_data = json.loads(prd_content)
+                chat = ralph.get_chat_session(session_id)
+                # Restore PRD to chat
+                chat.restore_prd(prd_data)
+            else:
+                # Plain text - try to extract JSON if present
+                chat = ralph.get_chat_session(session_id)
+                # Look for JSON block in the content
+                import re
+                json_match = re.search(r'\{[\s\S]*\}', prd_content)
+                if json_match:
+                    prd_data = json.loads(json_match.group())
+                    chat.restore_prd(prd_data)
+                else:
+                    # Just set the content as current PRD
+                    chat.set_prd_content(prd_content)
+
+        except Exception as e:
+            logger.warning(f"Could not fully restore PRD: {e}")
+            # Still return success - we got the content
+
+        return jsonify({
+            "success": True,
+            "session_id": session_id,
+            "restored": True,
+            "was_paid": was_paid,
+            "task_count": session['task_count'],
+            "is_paid": session['is_paid']
+        })
+
+    except Exception as e:
+        logger.exception("PRD restore error")
+        return jsonify({"error": str(e)}), 500
+
+
+# ============================================================================
+# TERMINAL SCRIPT API
 # ============================================================================
 
 @app.route('/api/terminal/script', methods=['POST'])
