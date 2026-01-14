@@ -172,6 +172,45 @@
             display: flex;
             flex-direction: column;
             gap: 8px;
+            position: relative;
+        }
+
+        .messages.drag-over {
+            background: rgba(255,107,53,0.05);
+        }
+
+        .messages.drag-over::after {
+            content: 'Drop PRD, image, or text here';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--accent);
+            color: #fff;
+            padding: 20px 40px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 100;
+            animation: fadeIn 0.2s ease-out;
+            pointer-events: none;
+        }
+
+        .drop-zone-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border: 3px dashed var(--accent);
+            border-radius: 8px;
+            display: none;
+            pointer-events: none;
+            z-index: 50;
+        }
+
+        .messages.drag-over .drop-zone-overlay {
+            display: block;
         }
 
         .message {
@@ -826,6 +865,7 @@
         </div>
 
         <div class="messages" id="messages">
+            <div class="drop-zone-overlay"></div>
             <div class="message assistant">
                 Hi, I'm Ralph. I'm your sauce boss. Let's cook. 🍳🔥<br><br>
                 What are we building today?
@@ -1202,6 +1242,211 @@
             recognition = null;
             voiceTranscript = '';
         }
+
+        // Drag and Drop functionality
+        const messagesDiv = document.getElementById('messages');
+
+        // Prevent default drag behaviors
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            messagesDiv.addEventListener(eventName, preventDefaults, false);
+            document.body.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        // Highlight drop zone
+        ['dragenter', 'dragover'].forEach(eventName => {
+            messagesDiv.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            messagesDiv.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight(e) {
+            messagesDiv.classList.add('drag-over');
+        }
+
+        function unhighlight(e) {
+            messagesDiv.classList.remove('drag-over');
+        }
+
+        // Handle dropped files
+        messagesDiv.addEventListener('drop', handleDrop, false);
+
+        async function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            const items = dt.items;
+
+            handleFiles(files, items);
+        }
+
+        async function handleFiles(files, items) {
+            if (files.length > 0) {
+                for (let i = 0; i < files.length; i++) {
+                    await processFile(files[i]);
+                }
+            }
+        }
+
+        async function processFile(file) {
+            const fileType = file.type;
+            const fileName = file.name;
+
+            // Text files
+            if (fileType.startsWith('text/') || fileName.endsWith('.txt') || fileName.endsWith('.md') || fileName.endsWith('.json')) {
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    const content = e.target.result;
+                    await processDroppedContent(content, fileName);
+                };
+                reader.readAsText(file);
+            }
+            // Image files
+            else if (fileType.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    const imageData = e.target.result;
+                    await processImage(imageData, fileName);
+                };
+                reader.readAsDataURL(file);
+            }
+            // JSON PRD files
+            else if (fileName.endsWith('.json')) {
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    try {
+                        const prdData = JSON.parse(e.target.result);
+                        await loadPRDFromJSON(prdData, fileName);
+                    } catch (err) {
+                        addMessage('assistant', '*scratches head*\n\nHmm, having trouble reading that JSON file. Could you make sure it\'s a valid PRD format?');
+                    }
+                };
+                reader.readAsText(file);
+            }
+            else {
+                addMessage('assistant', `*raises eyebrow*\n\nI'm not sure how to handle that file type (${fileType}). Try dropping a text file, image, or PRD JSON!`);
+            }
+        }
+
+        async function processDroppedContent(content, fileName) {
+            // Add user message showing what was dropped
+            addMessage('user', `📄 Dropped: ${fileName}\n\n${content.substring(0, 200)}${content.length > 200 ? '...' : ''}`);
+
+            // Send to Ralph for analysis
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message: `[Dropped file: ${fileName}]\n\n${content}\n\nPlease analyze this content and extract any relevant features, requirements, or information to add to the PRD. Summarize what you found and tell me what you're adding.`,
+                        session_id: sessionId,
+                        grok_api_key: groqApiKey
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.message) {
+                    addMessage('assistant', data.message);
+                }
+
+                if (data.prd_preview) {
+                    document.getElementById('prdEditor').value = data.prd_preview;
+                }
+            } catch (error) {
+                console.error('Error processing dropped content:', error);
+                addMessage('assistant', '*looks confused*\n\nSomething went wrong processing that file. Mind trying again?');
+            }
+        }
+
+        async function processImage(imageData, fileName) {
+            // Add user message showing image was dropped
+            addMessage('user', `🖼️ Dropped: ${fileName}\n\n[Image uploaded - analyzing...]`);
+
+            try {
+                const response = await fetch('/api/chat/analyze-image', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        image: imageData,
+                        filename: fileName,
+                        session_id: sessionId,
+                        grok_api_key: groqApiKey
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    addMessage('assistant', data.message || '*studies image carefully*\n\nInteresting! Let me add those details to the PRD.');
+
+                    if (data.prd_preview) {
+                        document.getElementById('prdEditor').value = data.prd_preview;
+                    }
+                } else {
+                    addMessage('assistant', '*squints at image*\n\nI can see this image, but I\'m having trouble extracting the details. Could you describe what you\'d like me to add from it?');
+                }
+            } catch (error) {
+                addMessage('assistant', '*rubs eyes*\n\nMy vision\'s a bit fuzzy right now. Could you tell me what\'s in that image and what you\'d like me to add to the PRD?');
+            }
+        }
+
+        async function loadPRDFromJSON(prdData, fileName) {
+            const prd = prdData.prd || prdData.prd_data || prdData;
+
+            if (!prd || !prd.pn) {
+                addMessage('assistant', '*scratches head*\n\nThis doesn\'t look like a valid PRD file. Make sure it has the project name and structure!');
+                return;
+            }
+
+            // Restore the PRD to the editor
+            document.getElementById('prdEditor').value = format_prd_display(prd, compressed=true);
+
+            // Ask Ralph to review and summarize
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message: `[Loading saved PRD: ${fileName}]\n\nI'm loading an existing PRD. Please review it, summarize what we've built so far, and tell me you're ready to continue adding to it.\n\nPRD: ${JSON.stringify(prd)}`,
+                        session_id: sessionId,
+                        grok_api_key: groqApiKey
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.message) {
+                    addMessage('assistant', data.message);
+                }
+            } catch (error) {
+                addMessage('assistant', `*adjusts tie*\n\nAlright, I've loaded **${prd.pn}**! \n\nI can see we have ${sum(len(cat.get('t', [])) for cat in prd.get('p', {}).values())} tasks across ${len(prd.get('p', {}))} phases.\n\n*rubs hands together*\n\nWhat should we add next?`);
+            }
+        }
+
+        // Also handle paste events
+        document.addEventListener('paste', async (e) => {
+            const items = e.clipboardData.items;
+
+            for (let i = 0; i < items.length; i++) {
+                const item = items[i];
+
+                if (item.type === 'text/plain') {
+                    item.getAsString(async (text) => {
+                        if (text.length > 100) {  // Only process longer pastes
+                            await processDroppedContent(text, 'pasted-content');
+                        }
+                    });
+                } else if (item.type.startsWith('image/')) {
+                    const file = item.getAsFile();
+                    await processFile(file);
+                }
+            }
+        });
 
         function showDonationPrompt(message) {
             document.getElementById('donationMessage').textContent = message;

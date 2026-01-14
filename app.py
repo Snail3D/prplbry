@@ -1933,6 +1933,77 @@ def api_ocr():
         return jsonify(handle_error(e)), 500
 
 
+@app.route('/api/chat/analyze-image', methods=['POST'])
+@limiter.limit("30 per hour")
+def api_analyze_image():
+    """
+    Analyze a dropped image and extract PRD-relevant information.
+
+    Expects JSON with 'image' (base64), 'filename', 'session_id', 'grok_api_key'
+    Returns analyzed information to add to PRD.
+    """
+    try:
+        data = request.get_json()
+
+        if not data or 'image' not in data:
+            return jsonify({"error": "No image data provided"}), 400
+
+        image_data = data.get('image', '')
+        filename = data.get('filename', 'uploaded-image')
+        session_id = data.get('session_id')
+        api_key = data.get('grok_api_key')
+
+        # Extract base64 data if it has the data URL prefix
+        if image_data.startswith('data:image'):
+            image_data = image_data.split(',')[1]
+
+        # Decode base64
+        import base64
+        from io import BytesIO
+
+        image_bytes = base64.b64decode(image_data)
+        image_file = BytesIO(image_bytes)
+        image_file.name = filename
+
+        # Use OCR to extract text from image
+        text = get_ocr_processor().extract_from_bytes(image_bytes, filename)
+
+        if not text or len(text.strip()) < 10:
+            return jsonify({
+                "error": "Could not extract enough text from image. The image might be unclear or contain no readable text.",
+                "message": "*squints at image*\n\nI can see this image, but I'm having trouble reading the text. Could you describe what you'd like me to add?"
+            }), 400
+
+        # Get chat session and process the extracted text
+        chat = ralph.get_chat_session(session_id)
+
+        # Process as a message asking Ralph to analyze and add features
+        response_message, _, prd_preview = chat.process_message(
+            f"[Analyzed image: {filename}]\n\nExtracted text:\n{text}\n\nPlease analyze this content and extract any relevant features, requirements, UI elements, or technical details to add to the PRD. Tell me what you found and what you're adding.",
+            api_key=api_key
+        )
+
+        return jsonify({
+            "success": True,
+            "message": response_message,
+            "prd_preview": prd_preview,
+            "extracted_text": text
+        })
+
+    except OCRError as e:
+        logger.error(f"OCR error in image analysis: {e}")
+        return jsonify({
+            "error": str(e),
+            "message": "*rubs eyes*\n\nMy vision's acting up. Could you describe what's in this image?"
+        }), 400
+    except Exception as e:
+        logger.exception("Image analysis error")
+        return jsonify({
+            "error": str(e),
+            "message": "*looks puzzled*\n\nSomething went wrong analyzing that image. Try describing it instead?"
+        }), 500
+
+
 @app.route('/api/prd/generate', methods=['POST'])
 @limiter.limit("10 per minute")  # X-911/X-1001: Rate limiting
 @validate_request  # X-910/X-1000: Input validation
