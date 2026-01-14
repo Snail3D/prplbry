@@ -301,6 +301,44 @@ def unlock_session(session_id: str) -> dict:
 
 
 # ============================================================================
+# PRD COPY COUNTER (Track PRDs created, once per IP)
+# ============================================================================
+
+COUNTER_FILE = Path(__file__).parent / 'prd_counter.txt'
+# Track IPs that have already copied (in-memory, resets on restart)
+copied_ips = set()
+
+def get_prd_count() -> int:
+    """Get current PRD copy count from file."""
+    try:
+        if COUNTER_FILE.exists():
+            return int(COUNTER_FILE.read_text().strip())
+    except:
+        pass
+    return 0
+
+def increment_prd_count(ip: str) -> int:
+    """Increment PRD count if this IP hasn't copied yet."""
+    if ip in copied_ips:
+        return get_prd_count()
+
+    # Add IP to tracking set
+    copied_ips.add(ip)
+
+    # Read current count
+    current = get_prd_count()
+
+    # Increment and save
+    new_count = current + 1
+    try:
+        COUNTER_FILE.write_text(str(new_count))
+    except Exception as e:
+        logger.error(f"Failed to save counter: {e}")
+
+    return new_count
+
+
+# ============================================================================
 # DECORATORS
 # ============================================================================
 
@@ -408,7 +446,8 @@ def ratelimit_handler(e):
 @app.route('/')
 def index():
     """Landing page - Full send sauce."""
-    return render_template('minimal.html')
+    prd_count = get_prd_count()
+    return render_template('minimal.html', prd_count=prd_count)
 
 
 @app.route('/create')
@@ -635,7 +674,8 @@ Your PRD is ready when you are! 🚀""",
             "has_prd": chat.get_prd() is not None,
             "task_count": task_count,
             "is_paid": is_paid,
-            "tasks_remaining": max(0, FREE_TASK_LIMIT - task_count) if not is_paid else None
+            "tasks_remaining": max(0, FREE_TASK_LIMIT - task_count) if not is_paid else None,
+            "prd_title": chat.generate_prd_title()  # Short 2-3 word title after step 4+
         })
 
     except Exception as e:
@@ -760,6 +800,27 @@ def api_session_status():
 
     except Exception as e:
         logger.exception("Session status error")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/api/prd/count', methods=['POST'])
+def api_prd_count():
+    """
+    Track PRD copy (one per IP).
+    Call this when user copies the PRD.
+
+    Returns:
+    {
+        "success": true,
+        "count": 42
+    }
+    """
+    try:
+        ip = get_remote_address()
+        new_count = increment_prd_count(ip)
+        return jsonify({"success": True, "count": new_count})
+    except Exception as e:
+        logger.exception("PRD count error")
         return jsonify({"error": str(e)}), 500
 
 

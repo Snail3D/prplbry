@@ -76,6 +76,19 @@
             color: #888;
         }
 
+        .prd-title {
+            font-size: 11px;
+            color: #ff6b35;
+            font-weight: 500;
+            margin-top: 2px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .prd-title.visible {
+            opacity: 1;
+        }
+
         /* Gender Toggle */
         .gender-toggle {
             display: flex;
@@ -1340,6 +1353,7 @@
                     <div class="chat-title">
                         <h1>Ralph</h1>
                         <span>Mr. Worms</span>
+                        <div class="prd-title" id="prdTitle"></div>
                     </div>
                 </div>
             </div>
@@ -1783,6 +1797,11 @@
                 // Update task counter UI
                 updateTaskCounter(data);
 
+                // Update PRD title if available (after ~3rd interaction)
+                if (data.prd_title) {
+                    updatePRDTitle(data.prd_title);
+                }
+
                 // Handle limit reached
                 if (data.limit_reached) {
                     showPaymentPrompt(data);
@@ -1931,9 +1950,15 @@
             if (modal) modal.remove();
         }
 
-        function closePaymentModal() {
-            const modal = document.getElementById('paymentModal');
-            if (modal) modal.remove();
+        function updatePRDTitle(title) {
+            // Update header title
+            const prdTitleEl = document.getElementById('prdTitle');
+            if (prdTitleEl) {
+                prdTitleEl.textContent = title;
+                prdTitleEl.classList.add('visible');
+            }
+            // Update browser tab title
+            document.title = `${title} - prplbry`;
         }
 
         async function unlockUnlimited() {
@@ -1962,6 +1987,8 @@
         async function copyPRD() {
             try {
                 await navigator.clipboard.writeText(prdEditor.value);
+                // Track PRD copy (once per IP)
+                fetch('/api/prd/count', { method: 'POST' }).catch(() => {});
                 // Visual feedback
                 const btn = document.querySelector('.header-btn');
                 const originalText = btn.textContent;

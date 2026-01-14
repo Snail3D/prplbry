@@ -214,8 +214,23 @@ def compress_prd(prd: dict) -> str:
     # Add legend header - this is the COMPLETE block
     prd_block = PRD_COMPRESSION_LEGEND.strip() + "\n\n" + json_str
 
-    # Add continuation footer
-    return update_prd_footer(prd_block)
+    # Append Buy Me a Coffee message
+    bmc_message = """
+
+===
+☕ SUPPORT RALPH MODE PRD CREATOR
+===
+
+If this PRD provides good, actionable guidance for building this project,
+consider supporting the creator who made this tool:
+
+https://buymeacoffee.com/snail3d
+
+Your support helps keep Ralph Mode free and improving. Thanks! ☕
+===
+"""
+
+    return prd_block + bmc_message
 
 
 def format_prd_display(prd: dict, compressed: bool = True) -> str:
@@ -830,45 +845,6 @@ Include: project purpose, tech stack, features, aesthetics, constraints. Be thor
 
         return " | ".join(parts) if parts else "New Chat"
 
-    def generate_prd_title(self) -> Optional[str]:
-        """
-        Generate a short 2-3 word PRD title based on conversation.
-        Returns None if not enough context yet (should be called after step 3+).
-        """
-        state = self.conversation_state
-        step = state.get("step", 0)
-
-        # Need at least 4 interactions to have enough context
-        if step < 4:
-            return None
-
-        prd = state.get("prd", {})
-
-        # Try to get project name first
-        project_name = prd.get("pn", "")
-        if project_name and project_name != "My Project":
-            # Shorten to 2-3 words
-            words = project_name.split()[:3]
-            return " ".join(words)
-
-        # Fallback: use purpose/description
-        purpose = state.get("purpose", "")
-        if purpose:
-            # Extract key words (first few meaningful words)
-            words = purpose.split()[:4]
-            # Filter out filler words
-            meaningful = [w for w in words if len(w) > 2 and w.lower() not in ["the", "for", "and", "with", "that"]]
-            if meaningful:
-                return " ".join(meaningful[:3])
-
-        # Last resort: tech stack based
-        ts = prd.get("ts", {})
-        fw = ts.get("fw", "")
-        if fw:
-            return f"{fw} App"
-
-        return None
-
     def save_conversation(self, name: Optional[str] = None) -> Dict:
         """
         Save the entire conversation state to a file.
@@ -1015,24 +991,3 @@ def list_chat_sessions() -> List[Dict]:
             "messages_count": len(chat.conversation_state["messages"])
         })
     return sorted(sessions, key=lambda x: x["messages_count"], reverse=True)
-
-def update_prd_footer(prd_content: str) -> str:
-    """Add continuation instructions to PRD footer"""
-    continuation_message = """
-
-===
-🔄 CONTINUE YOUR PRD
-===
-
-Copy everything above and save it somewhere safe. When you're ready to continue working on your PRD:
-
-1. Go to prplbry.com
-2. Click Start
-3. Drag and drop this file back into the chat
-4. Your PRD will be restored exactly as you left it
-
-Keep building. Keep shipping. 🚀
-===
-"""
-
-    return prd_content.replace("SUPPORT RALPH MODE PRD CREATOR", "CONTINUE YOUR PRD").replace("If this PRD provides good, actionable guidance for building this project,\nconsider supporting the creator who made this tool:\n\nhttps://buymeacoffee.com/snail3d\n\nYour support helps keep Ralph Mode free and improving. Thanks! ☕", continuation_message)
