@@ -94,19 +94,33 @@
         }
 
         .mode-toggle {
-            background: none;
+            background: var(--bg-tertiary);
             border: 1px solid var(--border);
             border-radius: 6px;
             padding: 6px 12px;
-            color: var(--text-secondary);
+            color: var(--text-primary);
             font-size: 12px;
             cursor: pointer;
             transition: all 0.2s;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
 
         .mode-toggle:hover {
-            background: var(--bg-tertiary);
-            color: var(--text-primary);
+            background: var(--accent);
+            color: #fff;
+            border-color: var(--accent);
+        }
+
+        .light-mode .mode-toggle {
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+        }
+
+        .light-mode .mode-toggle:hover {
+            background: var(--accent);
+            color: #fff;
+            border-color: var(--accent);
         }
 
         .messages {
@@ -383,6 +397,65 @@
             margin-bottom: 8px;
         }
 
+        /* Backroom Modal */
+        .backroom-content {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .backroom-speaker {
+            padding: 12px;
+            border-radius: 8px;
+            background: var(--bg-tertiary);
+        }
+
+        .backroom-speaker.stool {
+            border-left: 3px solid #e74c3c;
+        }
+
+        .backroom-speaker.gomer {
+            border-left: 3px solid #27ae60;
+        }
+
+        .backroom-name {
+            font-size: 11px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stool .backroom-name {
+            color: #e74c3c;
+        }
+
+        .gomer .backroom-name {
+            color: #27ae60;
+        }
+
+        .backroom-message {
+            font-size: 12px;
+            color: var(--text-primary);
+            line-height: 1.5;
+        }
+
+        .backroom-close {
+            width: 100%;
+            padding: 10px;
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            margin-top: 12px;
+        }
+
+        .backroom-close:hover {
+            background: var(--border);
+        }
+
         /* Scrollbar */
         ::-webkit-scrollbar {
             width: 6px;
@@ -444,6 +517,24 @@
                 <p>We use Cloudflare to keep the site fast and safe from bad guys. That's it.</p>
             </div>
             <button class="modal-btn" onclick="closePrivacy()" style="margin-top: 16px;">Got it</button>
+        </div>
+    </div>
+
+    <!-- Backroom Modal -->
+    <div class="modal-overlay" id="backroomModal">
+        <div class="modal">
+            <h3 style="color: var(--accent);">🎧 The Back Room</h3>
+            <div class="backroom-content">
+                <div class="backroom-speaker stool">
+                    <div class="backroom-name">🔴 Stool (Skeptic)</div>
+                    <div class="backroom-message" id="stoolMessage"></div>
+                </div>
+                <div class="backroom-speaker gomer">
+                    <div class="backroom-name">🟢 Gomer (Optimist)</div>
+                    <div class="backroom-message" id="gomerMessage"></div>
+                </div>
+            </div>
+            <button class="backroom-close" onclick="closeBackroom()">Got it, back to work</button>
         </div>
     </div>
 
@@ -658,6 +749,11 @@
                     showDonationPrompt(data.donation_message);
                 }
 
+                // Backroom debate (Stool vs Gomer)
+                if (data.backroom) {
+                    showBackroom(data.backroom);
+                }
+
             } catch (error) {
                 addMessage('assistant', '*scratches head*\n\nWell slap my thigh! Something went wrong. Please try again.');
             }
@@ -717,6 +813,16 @@
 
         function closePrivacy() {
             document.getElementById('privacyModal').classList.remove('active');
+        }
+
+        function showBackroom(backroom) {
+            document.getElementById('stoolMessage').textContent = backroom.stool || '';
+            document.getElementById('gomerMessage').textContent = backroom.gomer || '';
+            document.getElementById('backroomModal').classList.add('active');
+        }
+
+        function closeBackroom() {
+            document.getElementById('backroomModal').classList.remove('active');
         }
 
         async function loadChatHistory() {
