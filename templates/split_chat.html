@@ -1305,28 +1305,8 @@
                     <div class="ralph-avatar">R</div>
                     <div class="chat-title">
                         <h1>Ralph</h1>
-                        <span id="genderDisplay">Mr. Worms</span>
+                        <span>Mr. Worms</span>
                     </div>
-                </div>
-                <div class="chat-header-right" style="display: flex; gap: 8px; align-items: center;">
-                    <div class="gender-toggle">
-                        <button class="gender-btn active" id="maleBtn" onclick="setGender('male')">Mr.</button>
-                        <button class="gender-btn" id="femaleBtn" onclick="setGender('female')">Mrs.</button>
-                    </div>
-                    <button class="settings-btn" onclick="showSettingsModal()">⚙️ Model</button>
-                    <button class="reset-btn" onclick="showResetModal()">🗑️ Reset</button>
-                </div>
-            </div>
-
-            <!-- Services Tracker Panel -->
-            <div class="services-tracker" id="servicesTracker">
-                <div class="services-header">
-                    <span class="services-icon">🔑</span>
-                    <span class="services-title">API Keys Needed</span>
-                    <span class="services-count" id="servicesCount">0</span>
-                </div>
-                <div class="services-list" id="servicesList">
-                    <div class="services-empty">No services tracked yet. Mention services in chat to track them.</div>
                 </div>
             </div>
 
@@ -1446,12 +1426,7 @@
         const sendBtn = document.getElementById('sendBtn');
         const prdEditor = document.getElementById('prdEditor');
         const prdPlaceholder = document.getElementById('prdPlaceholder');
-        const prdTitle = document.getElementById('prdTitle');
-        const prdStatus = document.getElementById('prdStatus');
-        const genderDisplay = document.getElementById('genderDisplay');
-        const welcomeTitle = document.getElementById('welcomeTitle');
         let sessionId = '{{ session_id or "" }}';
-        let currentGender = 'male';
 
         // Auto-resize textarea
         function autoResize(textarea) {
