@@ -1,8 +1,16 @@
-# Web app dependencies
+# Flask Core
 flask>=2.3.0
 flask-cors>=4.0.0
 python-dotenv>=1.0.0
+
+# Rate limiting
+flask-limiter>=3.5.0
+
+# LLM & API
 requests>=2.31.0
 
-# For running the app
+# Data validation
+pydantic>=2.5.0
+
+# Production server
 gunicorn>=21.2.0
