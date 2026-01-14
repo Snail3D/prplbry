@@ -334,6 +334,25 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.12);
         }
 
+        .copy-btn.copied {
+            animation: copyPurpleToOrange 5s ease-out forwards;
+        }
+
+        @keyframes copyPurpleToOrange {
+            0% {
+                background: #a855f7;
+                color: #fff;
+                border-color: #a855f7;
+                box-shadow: 0 2px 8px rgba(168,85,247,0.4);
+            }
+            100% {
+                background: var(--bg-tertiary);
+                color: var(--text-primary);
+                border-color: var(--border);
+                box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+            }
+        }
+
         .prd-editor {
             flex: 1;
             padding: 16px;
@@ -926,7 +945,12 @@
             const btn = document.querySelector('.copy-btn');
             const originalText = btn.textContent;
             btn.textContent = '✓ Copied!';
-            setTimeout(() => btn.textContent = originalText, 1500);
+            btn.classList.add('copied');
+
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.classList.remove('copied');
+            }, 5000);
         }
 
         function showDonationPrompt(message) {
