@@ -19,6 +19,7 @@ from functools import wraps
 from pathlib import Path
 from typing import Dict, Any
 from datetime import datetime, timedelta
+from langdetect import detect, LangDetectException
 
 from flask import (
     Flask, render_template, request, jsonify, Response,
@@ -560,6 +561,25 @@ def api_status():
         })
 
 
+def detect_language(text: str) -> str:
+    """
+    Detect the language of the input text.
+    Returns ISO 639-1 language code (e.g., 'en', 'es', 'fr', 'zh').
+    Defaults to 'en' if detection fails.
+    """
+    try:
+        # Only detect if there's enough text (min 20 chars)
+        if len(text.strip()) < 20:
+            return 'en'
+
+        lang = detect(text)
+        logger.info(f"Detected language: {lang} for text: {text[:50]}...")
+        return lang
+    except LangDetectException:
+        logger.warning(f"Language detection failed for text: {text[:50]}...")
+        return 'en'
+
+
 @app.route('/api/chat', methods=['POST'])
 @limiter.limit("60 per minute")
 def api_chat():
@@ -574,6 +594,7 @@ def api_chat():
         data = request.get_json()
         message = data.get('message', '').strip()
         session_id = data.get('session_id', '')
+        grok_api_key = data.get('grok_api_key', '')  # User's Groq API key for translation
 
         # Ralph-specific parameters
         action = data.get('action')
@@ -591,6 +612,12 @@ def api_chat():
             chat = ralph.get_chat_session(str(uuid.uuid4()))
             session_id = chat.session_id
 
+        # Detect language from user's message (only on first message or if not set)
+        if message and not chat.conversation_state.get("language"):
+            detected_lang = detect_language(message)
+            chat.conversation_state["language"] = detected_lang
+            logger.info(f"Set conversation language to: {detected_lang}")
+
         # Get session info (no limits, just tracking)
         session_info = get_session(session_id)
         task_count = session_info['task_count']
@@ -607,7 +634,8 @@ def api_chat():
             action=action,
             suggestion_id=suggestion_id,
             vote=vote,
-            gender_toggle=gender_toggle
+            gender_toggle=gender_toggle,
+            api_key=grok_api_key  # Pass API key for translation
         )
 
         # Handle both old return format and new Ralph format
