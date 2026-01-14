@@ -2,7 +2,7 @@
 Ralph Mode PRD Creator - Main Flask Application
 
 SEC-001: SECRET_KEY validation (via config.py)
-SEC-002: OCR Configuration (via ocr_processor.py)
+SEC-002: OCR Configuration (DEPRECATED - text-only mode)
 SEC-003: LLaMA Model Initialization (via prd_engine.py)
 X-910/X-1000: Input Validation
 X-911/X-1001: Rate Limiting
@@ -34,12 +34,13 @@ from config import (
     OLLAMA_URL, OLLAMA_MODEL
 )
 from exceptions import (
-    PRDCreatorError, ValidationError, OCRError,
+    PRDCreatorError, ValidationError,
     PRDGenerationError, RateLimitError, handle_error
 )
 from prd_engine import get_prd_engine
 from prd_store import get_prd_store, PRD
-from ocr_processor import get_ocr_processor
+# OCR removed - text-only mode
+# from ocr_processor import get_ocr_processor
 import ralph
 import uuid
 
