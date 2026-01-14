@@ -1838,7 +1838,7 @@
                     max-width: 500px;
                     text-align: center;
                 ">
-                    <h2 style="color: #ff6b35; margin-bottom: 16px;">Hot dog! Look at you go! 🚀</h2>
+                    <h2 style="color: #ff6b35; margin-bottom: 16px;">Hot dog! Look at you go!</h2>
                     <p style="color: #e0e0e0; line-height: 1.6; margin-bottom: 24px; white-space: pre-line;">${message}</p>
                     <div style="display: flex; gap: 12px; flex-direction: column;">
                         <button onclick="donateYes()" style="
@@ -1850,7 +1850,7 @@
                             cursor: pointer;
                             font-size: 14px;
                             font-weight: 600;
-                        ">🔥 Heck yeah!</button>
+                        ">Yes, I'll support</button>
                         <button onclick="donateNo()" style="
                             padding: 14px 24px;
                             background: #2a2a2a;
@@ -1859,7 +1859,7 @@
                             border-radius: 6px;
                             cursor: pointer;
                             font-size: 14px;
-                        ">Nah, maybe next time</button>
+                        ">No thanks</button>
                     </div>
                 </div>
             `;
@@ -1870,13 +1870,13 @@
         function donateYes() {
             document.getElementById('donationModal').remove();
             window.open('https://buymeacoffee.com/snail3d', '_blank');
-            addMessage('assistant', '*adjusts tie*\n\nWell I\'ll be! Homer\'s gonna be thrilled! You\'re the real deal, {salutation} Worms. Much obliged! 🙏\n\nMmm... coffee... ☕');
+            addMessage('assistant', '*adjusts tie*\n\nWell I\'ll be! Homer\'s gonna be thrilled! You\'re the real deal, {salutation} Worms. Much obliged!');
         }
 
         function donateNo() {
             document.getElementById('donationModal').remove();
             donationRefusals++;
-            addMessage('assistant', '*nods slowly*\n\nNo sweat at all, {salutation} Worms! You just keep building great stuff. That\'s what matters around here! 👍');
+            addMessage('assistant', '*nods slowly*\n\nNo sweat at all, {salutation} Worms! You just keep building great stuff. That\'s what matters around here!');
         }
 
         function updateTaskCounter(data) {

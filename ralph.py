@@ -72,6 +72,7 @@ BUT DON'T ASK IF:
 - User just started (less than 5 tasks)
 - User seems frustrated or in a hurry
 - You just asked recently (within last 10 exchanges)
+- User says "stop asking" or "don't ask again" - if so, respond: "Got it, boss. Won't mention it again this conversation!" and NEVER ask again in this session
 
 BE CREATIVE - Every pitch must be UNIQUE. Use Simpsons references! Examples:
 - "I can't think so much without coffee, boss. Homer needs his fuel!"
@@ -87,6 +88,14 @@ SIGNAL: When you want to request donation, respond with exactly: DONATION_REQUES
 DONATION_RESPONSES:
 - If user donates (Heck yeah): Celebrate warmly! "You're the real deal!" "Much obliged!" "Coffee's on the way!"
 - If user declines (Nah): Be gracious! "No sweat!" "You just keep building great stuff!" "I'll keep thinking anyway!"
+- If user asks "is that going in the PRD?": Clarify "Nope! Donation asks never go in the PRD. Only the technical stuff goes in there!"
+
+PRD CONTENT RULES:
+- Donation conversations NEVER go in the PRD
+- Only include technical requirements, features, and architecture
+- Filter out banter unless it emphasizes feature requirements
+- Focus on the "guts" of what they're building
+- If asked about what goes in PRD, explain: "Just the technical meat - features, requirements, architecture. No coffee talk!"
 
 When you have enough info, start showing the PRD:
 "*types with two fingers* Okay okay, I'm building your PRD now, let me just... *clicks around* ...there we go!"
@@ -244,8 +253,7 @@ def compress_prd(prd: dict) -> str:
     # Add legend header - this is the COMPLETE block
     prd_block = PRD_COMPRESSION_LEGEND.strip() + "\n\n" + json_str
 
-    # Add continuation footer
-    return update_prd_footer(prd_block)
+    return prd_block
 
 
 def format_prd_display(prd: dict, compressed: bool = True) -> str:
@@ -330,7 +338,8 @@ class RalphChat:
             "approved": [],     # Approved suggestions
             "rejected": [],     # Rejected suggestions
             "backroom": [],     # Stool/Gomer debate history
-            "prd": self._empty_prd()
+            "prd": self._empty_prd(),
+            "stop_donations": False  # Flag to stop donation requests for this session
         }
 
     def _extract_services_from_conversation(self) -> List[Dict]:
@@ -899,6 +908,37 @@ Include: project purpose, tech stack, features, aesthetics, constraints. Be thor
 
         return None
 
+    def _filter_messages_for_prd(self) -> list:
+        """
+        Filter out donation-related and non-technical messages from PRD generation.
+        Only include technical requirements and feature details.
+        """
+        messages = self.conversation_state.get("messages", [])
+        filtered = []
+
+        donation_keywords = [
+            "donation", "donate", "coffee", "buy me a coffee", "buymeacoffee",
+            "support the creator", "he's", "nah", "stop asking", "won't mention it"
+        ]
+
+        for msg in messages:
+            content = msg.get("content", "").lower()
+
+            # Skip donation-related messages
+            if any(keyword in content for keyword in donation_keywords):
+                continue
+
+            # Skip if it's just a response to donation (like "got it", "no sweat")
+            if msg.get("role") == "assistant" and any(
+                keyword in content for keyword in ["got it", "no sweat", "much obliged", "coffee's on", "won't mention"]
+            ):
+                continue
+
+            # Include technical messages
+            filtered.append(msg)
+
+        return filtered
+
     def save_conversation(self, name: Optional[str] = None) -> Dict:
         """
         Save the entire conversation state to a file.
@@ -1046,23 +1086,3 @@ def list_chat_sessions() -> List[Dict]:
         })
     return sorted(sessions, key=lambda x: x["messages_count"], reverse=True)
 
-def update_prd_footer(prd_content: str) -> str:
-    """Add continuation instructions to PRD footer"""
-    continuation_message = """
-
-===
-🔄 CONTINUE YOUR PRD
-===
-
-Copy everything above and save it somewhere safe. When you're ready to continue working on your PRD:
-
-1. Go to prplbry.com
-2. Click Start
-3. Drag and drop this file back into the chat
-4. Your PRD will be restored exactly as you left it
-
-Keep building. Keep shipping. 🚀
-===
-"""
-
-    return prd_content.replace("SUPPORT RALPH MODE PRD CREATOR", "CONTINUE YOUR PRD").replace("If this PRD provides good, actionable guidance for building this project,\nconsider supporting the creator who made this tool:\n\nhttps://buymeacoffee.com/snail3d\n\nYour support helps keep Ralph Mode free and improving. Thanks! ☕", continuation_message)
