@@ -147,7 +147,7 @@ ANALYST_B = {
 PRD_COMPRESSION_LEGEND = """
 === PRD LEGEND (decode before reading) ===
 KEYS: pn=project_name pd=project_description sp=starter_prompt ts=tech_stack
-      fs=file_structure p=prds n=name d=description t=tasks ti=title
+      gh=github fs=file_structure p=prds n=name d=description t=tasks ti=title
       f=file pr=priority ac=acceptance_criteria pfc=prompt_for_claude
       cmd=commands ccs=claude_code_setup ifc=instructions_for_claude
 PHRASES: C=Create I=Install R=Run T=Test V=Verify Py=Python JS=JavaScript
@@ -299,6 +299,14 @@ def format_prd_display(prd: dict, compressed: bool = True) -> str:
         output.append("-" * 40)
         output.append(prd.get('pd', 'N/A'))
         output.append("\n")
+
+        # GitHub integration
+        if prd.get('gh'):
+            output.append("GITHUB INTEGRATION:")
+            output.append("-" * 40)
+            output.append("  ✓ GitHub repository")
+            output.append("  ✓ GitHub Actions CI/CD")
+            output.append("\n")
 
         output.append("TECH STACK:")
         output.append("-" * 40)
@@ -599,6 +607,7 @@ Translate ONLY the response text, nothing else."""
             "pn": "",
             "pd": "",
             "sp": "",
+            "gh": False,  # GitHub integration
             "ts": {},
             "fs": [],
             "p": {
@@ -757,8 +766,17 @@ Include: project purpose, tech stack, features, aesthetics, constraints. Be thor
         elif step == 2:
             if action == "github_yes" or "yes" in message_lower or "github" in message_lower:
                 state["github"] = True
+                state["prd"]["gh"] = True
+
+                # Add GitHub setup tasks
+                state["prd"]["p"]["01_setup"]["t"] = [
+                    {"id": "GH-001", "ti": "Initialize Git repository", "d": "Create git repo and initial commit", "f": "terminal", "pr": "high"},
+                    {"id": "GH-002", "ti": "Create GitHub repository", "d": "Set up GitHub repo with README and .gitignore", "f": "github.com", "pr": "high"},
+                    {"id": "GH-003", "ti": "Configure GitHub Actions", "d": "Set up CI/CD pipeline for automated testing", "f": ".github/workflows/", "pr": "medium"}
+                ]
             else:
                 state["github"] = False
+                state["prd"]["gh"] = False
 
             state["step"] = 3
             response = f"Noted. Tech stack?"
