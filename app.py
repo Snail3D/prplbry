@@ -460,6 +460,12 @@ def create_prd():
     return render_template('create.html')
 
 
+@app.route('/privacy')
+def privacy():
+    """Privacy policy page."""
+    return render_template('privacy.html')
+
+
 @app.route('/prds')
 def list_prds():
     """List all saved PRDs with pagination."""

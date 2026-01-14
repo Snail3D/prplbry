@@ -80,6 +80,35 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.15);
         }
 
+        .nav-links {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            display: flex;
+            gap: 12px;
+            opacity: 0;
+            animation: fadeIn 0.8s ease-out 0.4s forwards;
+        }
+
+        .nav-btn, .privacy-link {
+            padding: 12px 24px;
+            background: rgba(255,255,255,0.15);
+            color: #fff;
+            text-decoration: none;
+            border-radius: 25px;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            letter-spacing: -0.2px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .nav-btn:hover, .privacy-link:hover {
+            background: rgba(255,255,255,0.25);
+            transform: translateY(-1px);
+        }
+
         .footer {
             position: fixed;
             bottom: 30px;
@@ -100,6 +129,26 @@
         .prd-count span {
             color: #fff;
             font-weight: 600;
+        }
+
+        .how-to {
+            font-size: 11px;
+            color: rgba(255,255,255,0.6);
+            max-width: 500px;
+            line-height: 1.6;
+            margin-top: 12px;
+            font-weight: 400;
+            letter-spacing: -0.2px;
+            text-shadow: 0 1px 5px rgba(0,0,0,0.15);
+        }
+
+        .how-to code {
+            background: rgba(0,0,0,0.2);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 10px;
+            color: rgba(255,255,255,0.9);
         }
 
         @keyframes fadeInUp {
@@ -137,6 +186,10 @@
     </style>
 </head>
 <body>
+    <div class="nav-links">
+        <a href="/chat" class="nav-btn">← build</a>
+        <a href="/privacy" class="privacy-link">privacy</a>
+    </div>
     <div class="container">
         <div class="hero">
             <span class="logo">🫐</span>
@@ -147,6 +200,9 @@
         </div>
         <div class="footer">
             <p class="prd-count"><span>{{ prd_count }}</span> berries</p>
+            <p class="how-to">
+                Copy PRD → Open Claude Code → <code>cd</code> to your project folder → <code>claude --dangerously</code>
+            </p>
         </div>
     </div>
 </body>
