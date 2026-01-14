@@ -13,8 +13,8 @@
 
         body {
             font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
-            background: #0a0a0a;
-            color: #e0e0e0;
+            background: linear-gradient(135deg, #ff6b35 0%, #ff8c5a 50%, #ff6b35 100%);
+            color: #fff;
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -23,74 +23,136 @@
 
         .container {
             text-align: center;
-            max-width: 600px;
+            max-width: 700px;
             padding: 40px;
         }
 
-        .tagline {
-            font-size: 18px;
-            letter-spacing: -0.5px;
-            margin-bottom: 60px;
-            color: #a0a0a0;
-            font-weight: 400;
+        .hero {
+            opacity: 0;
+            animation: fadeInUp 0.8s ease-out forwards;
         }
 
-        .google-btn {
+        .tagline {
+            font-size: 42px;
+            letter-spacing: -1px;
+            margin-bottom: 20px;
+            color: #fff;
+            font-weight: 500;
+            line-height: 1.2;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        .tagline span {
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .subtitle {
+            font-size: 18px;
+            color: rgba(255,255,255,0.9);
+            margin-bottom: 60px;
+            font-weight: 400;
+            letter-spacing: -0.3px;
+            text-shadow: 0 1px 5px rgba(0,0,0,0.15);
+        }
+
+        .start-btn {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 12px;
-            padding: 16px 48px;
+            padding: 18px 56px;
             background: #fff;
-            color: #333;
+            color: #ff6b35;
             text-decoration: none;
-            border-radius: 6px;
-            font-size: 15px;
-            font-weight: 500;
-            transition: all 0.2s;
-            border: 1px solid #e0e0e0;
+            border-radius: 50px;
+            font-size: 18px;
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             letter-spacing: -0.3px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+            opacity: 0;
+            animation: fadeInUp 0.8s ease-out 0.3s forwards;
         }
 
-        .google-btn:hover {
-            background: #f8f8f8;
-            box-shadow: 0 2px 8px rgba(255,255,255,0.1);
-            transform: translateY(-1px);
+        .start-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+            background: #fff;
+        }
+
+        .start-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
         }
 
         .footer {
             position: fixed;
-            bottom: 20px;
+            bottom: 30px;
             left: 50%;
             transform: translateX(-50%);
-            font-size: 11px;
-            color: #404040;
-        }
-
-        .footer a {
-            color: #505050;
-            text-decoration: none;
-        }
-
-        .footer a:hover {
-            color: #707070;
+            opacity: 0;
+            animation: fadeIn 1s ease-out 0.8s forwards;
         }
 
         .prd-count {
-            margin-top: 24px;
-            font-size: 10px;
-            color: #303030;
+            font-size: 14px;
+            color: rgba(255,255,255,0.8);
             font-weight: 400;
+            letter-spacing: -0.2px;
+            text-shadow: 0 1px 5px rgba(0,0,0,0.15);
+        }
+
+        .prd-count span {
+            color: #fff;
+            font-weight: 600;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .tagline {
+                font-size: 32px;
+            }
+            .subtitle {
+                font-size: 16px;
+            }
+            .start-btn {
+                padding: 16px 48px;
+                font-size: 16px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <p class="tagline">Full send sauce.</p>
-        <a href="/chat" class="google-btn">
-            Start
-        </a>
-        <p class="prd-count">{{ prd_count }} purple berries created</p>
+        <div class="hero">
+            <p class="tagline">Build <span>PRDs</span> at the speed of thought.</p>
+            <p class="subtitle">Plan features, track tasks, export code. Powered by your ideas.</p>
+            <a href="/chat" class="start-btn">
+                Start Building →
+            </a>
+        </div>
+        <div class="footer">
+            <p class="prd-count"><span>{{ prd_count }}</span> purple berries created</p>
+        </div>
     </div>
 </body>
 </html>
