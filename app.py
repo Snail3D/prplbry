@@ -18,6 +18,7 @@ from io import BytesIO
 from functools import wraps
 from pathlib import Path
 from typing import Dict, Any
+from datetime import datetime, timedelta
 
 from flask import (
     Flask, render_template, request, jsonify, Response,
@@ -258,6 +259,45 @@ limiter = Limiter(
 # Initialize components
 prd_engine = get_prd_engine()
 prd_store = get_prd_store()
+
+# ============================================================================
+# SESSION MANAGEMENT (Pricing & Task Limits)
+# ============================================================================
+
+# In-memory session storage (ephemeral)
+sessions = {}
+
+FREE_TASK_LIMIT = 50
+UNLOCK_PRICE = 2.00  # $2.00
+
+def get_session(session_id: str) -> dict:
+    """Get or create a session."""
+    if session_id not in sessions:
+        sessions[session_id] = {
+            'task_count': 0,
+            'is_paid': False,
+            'created_at': datetime.utcnow()
+        }
+    return sessions[session_id]
+
+def increment_task_count(session_id: str) -> dict:
+    """Increment task count and return session info."""
+    session = get_session(session_id)
+    session['task_count'] += 1
+    return session
+
+def can_add_task(session_id: str) -> tuple[bool, dict]:
+    """Check if user can add more tasks."""
+    session = get_session(session_id)
+    if session['is_paid']:
+        return True, session
+    return session['task_count'] < FREE_TASK_LIMIT, session
+
+def unlock_session(session_id: str) -> dict:
+    """Unlock a session (after payment)."""
+    session = get_session(session_id)
+    session['is_paid'] = True
+    return session
 
 
 # ============================================================================
@@ -509,6 +549,55 @@ def api_chat():
             chat = ralph.get_chat_session(str(uuid.uuid4()))
             session_id = chat.session_id
 
+        # Check if this is adding a task (simple heuristic: message with actionable content)
+        is_task_addition = (
+            message and
+            action not in ['generate_prd', 'auto_summarize'] and
+            not suggestion_id and
+            not vote and
+            not gender_toggle and
+            len(message) > 10  # Substantial message
+        )
+
+        # Check task limits for free users
+        session_info = get_session(session_id)
+        task_count = session_info['task_count']
+        is_paid = session_info['is_paid']
+
+        if is_task_addition and not is_paid:
+            can_add, session_info = can_add_task(session_id)
+            if not can_add:
+                # Hit the free limit!
+                return jsonify({
+                    "success": True,
+                    "session_id": session_id,
+                    "message": f"""**Whoa, you've reached the end of the free limit!** 🎯
+
+You've added {FREE_TASK_LIMIT} tasks to your PRD. Not bad!
+
+**You have two options:**
+
+1. **Create your PRD now** - Click "Generate PRD" to finalize and start building
+
+2. **Unlock unlimited** - Pay ${UNLOCK_PRICE:.2f} to keep adding as many tasks as you want
+
+Your PRD is ready when you are! 🚀""",
+                    "actions": [],
+                    "suggestions": [],
+                    "prd_preview": chat.get_prd() and ralph.compress_prd(chat.get_prd()),
+                    "backroom": None,
+                    "has_prd": chat.get_prd() is not None,
+                    "limit_reached": True,
+                    "task_count": task_count,
+                    "is_paid": False,
+                    "unlock_price": UNLOCK_PRICE
+                })
+
+            # Increment task counter
+            if is_task_addition:
+                increment_task_count(session_id)
+                task_count = session_info['task_count']
+
         # Process message/action and get response
         # Ralph returns: (response, suggestions, prd_preview, backroom)
         result = chat.process_message(
@@ -543,7 +632,10 @@ def api_chat():
             "suggestions": suggestions,
             "prd_preview": prd_preview,
             "backroom": backroom,
-            "has_prd": chat.get_prd() is not None
+            "has_prd": chat.get_prd() is not None,
+            "task_count": task_count,
+            "is_paid": is_paid,
+            "tasks_remaining": max(0, FREE_TASK_LIMIT - task_count) if not is_paid else None
         })
 
     except Exception as e:
@@ -579,6 +671,95 @@ def api_reset_chat():
 
     except Exception as e:
         logger.exception("Reset error")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/api/unlock', methods=['POST'])
+def api_unlock_session():
+    """
+    Unlock unlimited tasks for a session (after payment).
+
+    Expected JSON:
+    {
+        "session_id": "uuid",
+        "payment_token": "stripe_payment_token"  # or similar
+    }
+
+    Returns:
+    {
+        "success": true,
+        "unlocked": true,
+        "task_count": 50,
+        "is_paid": true
+    }
+    """
+    try:
+        data = request.get_json()
+        session_id = data.get('session_id', '')
+        payment_token = data.get('payment_token', '')
+
+        if not session_id:
+            return jsonify({"error": "Session ID is required"}), 400
+
+        # TODO: Verify payment with Stripe
+        # For now, just unlock (we'll add Stripe integration later)
+        # if not verify_payment(payment_token):
+        #     return jsonify({"error": "Invalid payment token"}), 400
+
+        # Unlock the session
+        session = unlock_session(session_id)
+
+        return jsonify({
+            "success": True,
+            "unlocked": True,
+            "task_count": session['task_count'],
+            "is_paid": session['is_paid'],
+            "message": "🎉 Unlocked! You can now add unlimited tasks to your PRD."
+        })
+
+    except Exception as e:
+        logger.exception("Unlock error")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/api/session/status', methods=['GET'])
+def api_session_status():
+    """
+    Get session status (task count, payment status, etc).
+
+    Query params:
+        session_id: UUID
+
+    Returns:
+    {
+        "success": true,
+        "task_count": 25,
+        "is_paid": false,
+        "tasks_remaining": 25
+    }
+    """
+    try:
+        session_id = request.args.get('session_id', '')
+        if not session_id:
+            return jsonify({"error": "Session ID is required"}), 400
+
+        session = get_session(session_id)
+
+        response = {
+            "success": True,
+            "task_count": session['task_count'],
+            "is_paid": session['is_paid'],
+            "free_limit": FREE_TASK_LIMIT,
+            "unlock_price": UNLOCK_PRICE
+        }
+
+        if not session['is_paid']:
+            response['tasks_remaining'] = max(0, FREE_TASK_LIMIT - session['task_count'])
+
+        return jsonify(response)
+
+    except Exception as e:
+        logger.exception("Session status error")
         return jsonify({"error": str(e)}), 500
 
 
