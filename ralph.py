@@ -360,7 +360,7 @@ class RalphChat:
             "rejected": [],     # Rejected suggestions
             "backroom": [],     # Stool/Gomer debate history
             "prd": self._empty_prd(),
-            "stop_donations": False  # Flag to stop donation requests for this session
+            "stop_donations": False,  # Flag to stop donation requests for this session
             "language": "en"  # User's language (default English)
         }
 
