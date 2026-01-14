@@ -451,7 +451,8 @@ def ratelimit_handler(e):
 def index():
     """Landing page - Full send sauce."""
     prd_count = get_prd_count()
-    return render_template('minimal.html', prd_count=prd_count)
+    berry_text = "berry" if prd_count == 1 else "berries"
+    return render_template('minimal.html', prd_count=prd_count, berry_text=berry_text)
 
 
 @app.route('/create')
