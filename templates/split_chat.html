@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ralph Mode PRD Creator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>prplbry</title>
     <style>
         * {
             margin: 0;
@@ -11,640 +11,241 @@
             box-sizing: border-box;
         }
 
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #1a1a1a;
+            --bg-tertiary: #2a2a2a;
+            --text-primary: #e0e0e0;
+            --text-secondary: #888;
+            --accent: #ff6b35;
+            --border: #2a2a2a;
+            --input-bg: #1a1a1a;
+        }
+
+        .light-mode {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f5f5f5;
+            --bg-tertiary: #e5e5e5;
+            --text-primary: #1a1a1a;
+            --text-secondary: #666;
+            --border: #e0e0e0;
+            --input-bg: #f9f9f9;
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #1a1a1a;
-            color: #e0e0e0;
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
             height: 100vh;
             display: flex;
             overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
-        /* Split Container */
-        .split-container {
-            display: flex;
-            width: 100%;
-            height: 100vh;
+        /* Desktop: Side-by-side */
+        @media (min-width: 769px) {
+            body {
+                flex-direction: row;
+            }
+
+            .chat-section {
+                flex: 1;
+                max-height: none;
+                border-right: 1px solid var(--border);
+                border-bottom: none;
+            }
+
+            .prd-section {
+                flex: 1;
+            }
         }
 
-        /* Left Panel - Chat */
-        .chat-panel {
+        /* Mobile: Stacked (chat top, PRD bottom) */
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+        }
+
+        /* Chat Section */
+        .chat-section {
             flex: 1;
-            min-width: 350px;
-            max-width: 600px;
             display: flex;
             flex-direction: column;
-            border-right: 1px solid #2a2a2a;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg-primary);
+            min-width: 0;
         }
 
         .chat-header {
             padding: 12px 16px;
-            border-bottom: 1px solid #2a2a2a;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            background: #1f1f1f;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg-secondary);
         }
 
-        .chat-header-left {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .ralph-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 8px;
-            background: linear-gradient(135deg, #ff6b35, #f7931e);
-            color: #fff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 18px;
-            box-shadow: 0 2px 8px rgba(255, 107, 53, 0.3);
-        }
-
-        .chat-title h1 {
-            font-size: 16px;
+        .chat-title {
+            font-size: 14px;
             font-weight: 600;
+            color: var(--text-primary);
         }
 
-        .chat-title span {
-            font-size: 12px;
-            color: #888;
-        }
-
-        .prd-title {
-            font-size: 11px;
-            color: #ff6b35;
-            font-weight: 500;
-            margin-top: 2px;
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-
-        .prd-title.visible {
-            opacity: 1;
-        }
-
-        /* Gender Toggle */
-        .gender-toggle {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 4px;
-            background: #2a2a2a;
+        .mode-toggle {
+            background: none;
+            border: 1px solid var(--border);
             border-radius: 6px;
-        }
-
-        .gender-btn {
-            padding: 4px 10px;
-            background: transparent;
-            border: none;
-            color: #888;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            font-size: 12px;
             cursor: pointer;
-            border-radius: 4px;
-            font-size: 11px;
-            font-weight: 500;
             transition: all 0.2s;
         }
 
-        .gender-btn.active {
-            background: #ff6b35;
-            color: #fff;
+        .mode-toggle:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
         }
 
-        .gender-btn:hover:not(.active) {
-            color: #e0e0e0;
-        }
-
-        .messages-container {
+        .messages {
             flex: 1;
             overflow-y: auto;
             padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
         }
 
         .message {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 16px;
-            animation: fadeIn 0.3s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(8px); }
-            to { opacity: 1; transform: translateY(0); }
+            max-width: 85%;
+            padding: 10px 14px;
+            border-radius: 12px;
+            font-size: 14px;
+            line-height: 1.5;
         }
 
         .message.user {
-            flex-direction: row-reverse;
-        }
-
-        .message-avatar {
-            width: 28px;
-            height: 28px;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-        .message.assistant .message-avatar {
-            background: linear-gradient(135deg, #ff6b35, #f7931e);
+            align-self: flex-end;
+            background: var(--accent);
             color: #fff;
         }
 
-        .message.user .message-avatar {
-            background: #2a2a2a;
-            color: #e0e0e0;
+        .message.assistant {
+            align-self: flex-start;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
         }
 
-        .message-bubble {
-            padding: 10px 12px;
-            border-radius: 10px;
-            line-height: 1.5;
-            font-size: 14px;
-            max-width: 85%;
-        }
-
-        .message.assistant .message-bubble {
-            background: transparent;
-            padding-left: 0;
-        }
-
-        .message.user .message-bubble {
-            background: #2a2a2a;
-        }
-
-        /* Backroom Debate */
-        .backroom-debate {
-            margin-top: 12px;
-            padding: 12px;
-            background: #151515;
-            border-radius: 8px;
-            border: 1px solid #2a2a2a;
-        }
-
-        .backroom-header {
-            font-size: 11px;
-            color: #666;
-            margin-bottom: 8px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .analyst-message {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 8px;
-            font-size: 13px;
-        }
-
-        .analyst-message:last-child {
-            margin-bottom: 0;
-        }
-
-        .analyst-emoji {
-            font-size: 14px;
-        }
-
-        .analyst-name {
-            font-weight: 600;
-            color: #888;
-            margin-right: 4px;
-        }
-
-        .analyst-text {
-            color: #aaa;
-            font-style: italic;
-        }
-
-        /* Suggestions */
-        .message-actions {
-            margin-top: 10px;
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
-        .suggestion-item {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 8px 12px;
-            background: #1f1f1f;
-            border: 1px solid #2a2a2a;
-            border-radius: 8px;
-            font-size: 13px;
-        }
-
-        .suggestion-text {
-            color: #e0e0e0;
-        }
-
-        .vote-buttons {
-            display: flex;
-            gap: 4px;
-        }
-
-        .vote-btn {
-            width: 24px;
-            height: 24px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s;
-        }
-
-        .vote-btn.up {
-            background: #2a2a2a;
-            color: #888;
-        }
-
-        .vote-btn.up:hover {
-            background: #4ade80;
-            color: #000;
-        }
-
-        .vote-btn.down {
-            background: #2a2a2a;
-            color: #888;
-        }
-
-        .vote-btn.down:hover {
-            background: #ef4444;
-            color: #fff;
-        }
-
-        .vote-btn.voted {
-            opacity: 0.5;
-            cursor: default;
-        }
-
-        .action-btn {
-            padding: 8px 14px;
-            background: #1f1f1f;
-            border: 1px solid #2a2a2a;
-            border-radius: 6px;
-            color: #e0e0e0;
-            cursor: pointer;
-            font-size: 13px;
-            transition: all 0.2s;
-        }
-
-        .action-btn:hover {
-            background: #2a2a2a;
-            border-color: #ff6b35;
-        }
-
-        /* Input area */
         .input-area {
-            padding: 12px;
-            border-top: 1px solid #2a2a2a;
-            background: #1f1f1f;
-        }
-
-        .input-wrapper {
-            position: relative;
+            padding: 12px 16px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 8px;
+            background: var(--bg-secondary);
         }
 
         .chat-input {
-            width: 100%;
-            padding: 10px 40px 10px 12px;
-            background: #2a2a2a;
-            border: 1px solid #2a2a2a;
-            border-radius: 10px;
-            color: #e0e0e0;
+            flex: 1;
+            padding: 10px 14px;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            color: var(--text-primary);
             font-size: 14px;
-            resize: none;
             outline: none;
-            font-family: inherit;
         }
 
         .chat-input:focus {
-            border-color: #ff6b35;
+            border-color: var(--accent);
         }
 
         .send-btn {
-            position: absolute;
-            right: 8px;
-            bottom: 8px;
-            width: 26px;
-            height: 26px;
-            background: #ff6b35;
+            padding: 10px 20px;
+            background: var(--accent);
+            color: #fff;
             border: none;
-            border-radius: 6px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .send-btn:hover {
-            opacity: 0.8;
+            transition: opacity 0.2s;
         }
 
         .send-btn:disabled {
-            opacity: 0.3;
+            opacity: 0.5;
             cursor: not-allowed;
         }
 
-        /* Right Panel - PRD Editor */
-        .prd-panel {
+        /* PRD Section - BOTTOM */
+        .prd-section {
             flex: 1;
             display: flex;
             flex-direction: column;
-            min-width: 400px;
             overflow: hidden;
+            background: var(--bg-primary);
         }
 
         .prd-header {
             padding: 12px 16px;
-            border-bottom: 1px solid #2a2a2a;
             display: flex;
+            align-items: center;
             justify-content: space-between;
-            align-items: center;
-            background: #1f1f1f;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg-secondary);
         }
 
-        .prd-header h2 {
-            font-size: 14px;
+        .prd-title-text {
+            font-size: 12px;
             font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            color: var(--accent);
         }
 
-        .prd-header-actions {
-            display: flex;
-            gap: 6px;
-        }
-
-        .header-btn {
-            padding: 6px 12px;
-            background: #1f1f1f;
-            border: 1px solid #2a2a2a;
+        .copy-btn {
+            background: none;
+            border: 1px solid var(--border);
             border-radius: 6px;
-            color: #e0e0e0;
-            cursor: pointer;
+            padding: 6px 12px;
+            color: var(--text-secondary);
             font-size: 11px;
+            cursor: pointer;
             transition: all 0.2s;
         }
 
-        .header-btn:hover {
-            background: #2a2a2a;
-        }
-
-        .header-btn.primary {
-            background: #ff6b35;
-            border-color: #ff6b35;
-            color: #fff;
-        }
-
-        .prd-editor-container {
-            flex: 1;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
+        .copy-btn:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
         }
 
         .prd-editor {
             flex: 1;
-            background: #0f0f0f;
-            color: #e0e0e0;
-            border: none;
-            outline: none;
             padding: 16px;
-            font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
-            font-size: 12px;
-            line-height: 1.5;
-            resize: none;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: 'SF Mono', Monaco, 'Consolas', monospace;
+            font-size: 11px;
+            line-height: 1.6;
             overflow-y: auto;
-            overflow-x: hidden;
             white-space: pre-wrap;
             word-wrap: break-word;
-            tab-size: 2;
-        }
-
-        .prd-editor:focus {
+            border: none;
             outline: none;
+            resize: none;
         }
 
-        /* Scrollbar */
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: #0f0f0f;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #2a2a2a;
-            border-radius: 3px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: #ff6b35;
-        }
-
-        /* Typing indicator */
-        .typing-indicator {
-            display: flex;
-            gap: 4px;
-            padding: 6px 0;
-        }
-
-        .typing-indicator span {
-            width: 5px;
-            height: 5px;
-            background: #666;
-            border-radius: 50%;
-            animation: bounce 1.4s infinite ease-in-out;
-        }
-
-        .typing-indicator span:nth-child(1) {
-            animation-delay: -0.32s;
-        }
-
-        .typing-indicator span:nth-child(2) {
-            animation-delay: -0.16s;
-        }
-
-        @keyframes bounce {
-            0%, 80%, 100% {
-                transform: scale(0.8);
-                opacity: 0.5;
-            }
-            40% {
-                transform: scale(1);
-                opacity: 1;
-            }
-        }
-
-        /* Status badges */
-        .status-badge {
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-size: 10px;
-            font-weight: 500;
-        }
-
-        .status-badge.building {
-            background: rgba(255, 107, 53, 0.2);
-            color: #ff6b35;
-        }
-
-        .status-badge.complete {
-            background: rgba(74, 222, 128, 0.2);
-            color: #4ade80;
-        }
-
-        /* Welcome screen */
-        .welcome-screen {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            text-align: center;
-            padding: 20px;
-        }
-
-        .welcome-screen h2 {
-            font-size: 20px;
-            font-weight: 500;
-            margin-bottom: 6px;
-        }
-
-        .welcome-screen p {
-            color: #888;
-            font-size: 13px;
-            margin-bottom: 24px;
-        }
-
-        .suggestion-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 6px;
-            width: 100%;
-            max-width: 280px;
-        }
-
-        .suggestion-card {
-            padding: 10px;
-            background: #1f1f1f;
-            border: 1px solid #2a2a2a;
-            border-radius: 8px;
-            cursor: pointer;
-            text-align: left;
-            transition: border-color 0.2s;
-        }
-
-        .suggestion-card:hover {
-            border-color: #ff6b35;
-        }
-
-        .suggestion-card h4 {
-            font-size: 12px;
-            margin-bottom: 2px;
-            color: #e0e0e0;
-        }
-
-        .suggestion-card p {
-            font-size: 11px;
-            color: #888;
-            margin: 0;
-        }
-
-        /* PRD placeholder */
-        .prd-placeholder {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            color: #666;
-            text-align: center;
-        }
-
-        .prd-placeholder svg {
-            width: 56px;
-            height: 56px;
-            opacity: 0.3;
-            margin-bottom: 16px;
-        }
-
-        .prd-placeholder h3 {
-            font-size: 16px;
-            margin-bottom: 6px;
-            color: #555;
-        }
-
-        .prd-placeholder p {
-            font-size: 12px;
-        }
-
-        /* Legend highlight in PRD */
-        .prd-editor {
-            white-space: pre;
-        }
-
-        /* Reset button */
-        .reset-btn {
-            padding: 6px 12px;
-            background: transparent;
-            border: 1px solid #ef4444;
-            border-radius: 6px;
-            color: #ef4444;
-            cursor: pointer;
-            font-size: 11px;
-            transition: all 0.2s;
-        }
-
-        .reset-btn:hover {
-            background: #ef4444;
-            color: #fff;
-        }
-
-        .settings-btn {
-            padding: 6px 12px;
-            background: transparent;
-            border: 1px solid #ff6b35;
-            border-radius: 6px;
-            color: #ff6b35;
-            cursor: pointer;
-            font-size: 11px;
-            transition: all 0.2s;
-        }
-
-        .settings-btn:hover {
-            background: #ff6b35;
-            color: #fff;
-        }
-
-        /* Confirmation modal */
+        /* API Key Modal */
         .modal-overlay {
-            display: none;
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 1000;
+            background: rgba(0,0,0,0.9);
+            display: none;
             align-items: center;
             justify-content: center;
+            z-index: 9999;
         }
 
         .modal-overlay.active {
@@ -652,1116 +253,215 @@
         }
 
         .modal {
-            background: #1f1f1f;
-            border: 1px solid #2a2a2a;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
             border-radius: 12px;
             padding: 24px;
             max-width: 400px;
             width: 90%;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
         }
 
         .modal h3 {
-            font-size: 18px;
-            margin-bottom: 8px;
-            color: #e0e0e0;
+            font-size: 16px;
+            margin-bottom: 16px;
+            color: var(--text-primary);
         }
 
         .modal p {
-            font-size: 14px;
-            color: #888;
-            margin-bottom: 20px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
             line-height: 1.5;
         }
 
-        .modal-buttons {
-            display: flex;
-            gap: 10px;
-            justify-content: flex-end;
-        }
-
-        .modal-btn {
-            padding: 10px 18px;
-            border-radius: 8px;
-            font-size: 13px;
-            cursor: pointer;
-            transition: all 0.2s;
-            border: none;
-        }
-
-        .modal-btn.cancel {
-            background: #2a2a2a;
-            color: #e0e0e0;
-        }
-
-        .modal-btn.cancel:hover {
-            background: #3a3a3a;
-        }
-
-        .modal-btn.confirm {
-            background: #ef4444;
-            color: #fff;
-        }
-
-        .modal-btn.confirm:hover {
-            background: #dc2626;
-        }
-
-        /* Settings Modal specific */
-        .settings-content {
-            max-height: 500px;
-            overflow-y: auto;
-        }
-
-        .provider-tabs {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 20px;
-            border-bottom: 1px solid #2a2a2a;
-            padding-bottom: 12px;
-        }
-
-        .provider-tab {
-            padding: 8px 16px;
-            background: transparent;
-            border: none;
-            color: #888;
-            cursor: pointer;
-            font-size: 13px;
-            border-radius: 6px;
-            transition: all 0.2s;
-        }
-
-        .provider-tab.active {
-            background: #ff6b35;
-            color: #fff;
-        }
-
-        .provider-tab:hover:not(.active) {
-            background: #2a2a2a;
-            color: #e0e0e0;
-        }
-
-        .provider-panel {
-            display: none;
-        }
-
-        .provider-panel.active {
-            display: block;
-        }
-
-        /* Services Tracker Panel */
-        .services-tracker {
-            margin: 0 12px 12px 12px;
-            background: #1a1a1a;
-            border: 1px solid #2a2a2a;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-
-        .services-header {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 12px;
-            background: #1f1f1f;
-            border-bottom: 1px solid #2a2a2a;
-        }
-
-        .services-icon {
-            font-size: 16px;
-        }
-
-        .services-title {
-            flex: 1;
-            font-size: 12px;
-            font-weight: 600;
-            color: #888;
-        }
-
-        .services-count {
-            font-size: 11px;
-            background: #ff6b35;
-            color: #fff;
-            padding: 2px 6px;
-            border-radius: 10px;
-            font-weight: 600;
-        }
-
-        .services-list {
-            max-height: 150px;
-            overflow-y: auto;
-            padding: 8px;
-        }
-
-        .services-empty {
-            font-size: 11px;
-            color: #666;
-            text-align: center;
-            padding: 12px;
-        }
-
-        .service-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px;
-            background: #0f0f0f;
-            border: 1px solid #2a2a2a;
-            border-radius: 6px;
-            margin-bottom: 6px;
-            font-size: 11px;
-        }
-
-        .service-item:last-child {
-            margin-bottom: 0;
-        }
-
-        .service-icon {
-            font-size: 14px;
-        }
-
-        /* Drag & Drop Zone */
-        .drop-zone-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(10, 10, 10, 0.95);
-            border: 2px dashed #ff6b35;
-            border-radius: 8px;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
-            margin: 8px;
-        }
-
-        .drop-zone-overlay.active {
-            display: flex;
-        }
-
-        .drop-zone-content {
-            text-align: center;
-        }
-
-        .drop-zone-icon {
-            font-size: 48px;
-            margin-bottom: 16px;
-        }
-
-        .drop-zone-text {
-            color: #e0e0e0;
-            font-size: 16px;
-            font-weight: 500;
-            margin-bottom: 8px;
-        }
-
-        .drop-zone-subtext {
-            color: #606060;
-            font-size: 12px;
-        }
-
-        /* Claude Dangerously Run Mode Footer */
-        .danger-footer {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: #0a0a0a;
-            border-top: 1px solid #1a1a1a;
-            padding: 8px 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            z-index: 900;
-        }
-
-        .danger-code {
-            background: #1a1a1a;
-            border: 1px solid #ff6b35;
-            color: #ff6b35;
-            padding: 6px 12px;
-            border-radius: 4px;
-            font-family: 'SF Mono', 'Monaco', monospace;
-            font-size: 12px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .danger-code:hover {
-            background: #ff6b35;
-            color: #fff;
-        }
-
-        .danger-label {
-            color: #404040;
-            font-size: 11px;
-        }
-
-        .service-name {
-            flex: 1;
-            color: #aaa;
-            font-weight: 500;
-        }
-
-        .service-env {
-            font-size: 9px;
-            color: #666;
-            font-family: monospace;
-        }
-
-        .form-group {
-            margin-bottom: 16px;
-        }
-
-        .form-group label {
-            display: block;
-            font-size: 12px;
-            color: #888;
-            margin-bottom: 6px;
-        }
-
-        .form-group input,
-        .form-group select {
+        .api-input {
             width: 100%;
             padding: 10px 12px;
-            background: #2a2a2a;
-            border: 1px solid #2a2a2a;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
             border-radius: 8px;
-            color: #e0e0e0;
+            color: var(--text-primary);
             font-size: 13px;
+            margin-bottom: 16px;
             outline: none;
         }
 
-        .form-group input:focus,
-        .form-group select:focus {
-            border-color: #ff6b35;
+        .api-input:focus {
+            border-color: var(--accent);
         }
 
-        .model-list {
-            max-height: 200px;
-            overflow-y: auto;
-            border: 1px solid #2a2a2a;
-            border-radius: 8px;
-            padding: 8px;
-        }
-
-        .model-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .model-item:hover {
-            background: #2a2a2a;
-        }
-
-        .model-item.selected {
-            background: rgba(255, 107, 53, 0.2);
-            border: 1px solid #ff6b35;
-        }
-
-        .model-item-name {
-            font-size: 13px;
-            color: #e0e0e0;
-        }
-
-        /* Drop zone for folder drag-drop */
-        .drop-zone {
-            margin-top: 8px;
-            padding: 12px;
-            border: 2px dashed #2a2a2a;
-            border-radius: 8px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s;
-            background: #0f0f0f;
-        }
-
-        .drop-zone:hover {
-            border-color: #ff6b35;
-            background: #1a1a1a;
-        }
-
-        .drop-zone.dragover {
-            border-color: #4ade80;
-            background: rgba(74, 222, 128, 0.1);
-        }
-
-        .drop-zone-icon {
-            font-size: 24px;
-            margin-bottom: 4px;
-        }
-
-        .drop-zone-text {
-            font-size: 11px;
-            color: #888;
-        }
-
-        /* Password input with show/hide toggle */
-        .password-input-wrapper {
-            position: relative;
-            display: flex;
-            align-items: center;
-        }
-
-        .password-input-wrapper input {
-            padding-right: 35px;
-        }
-
-        .password-toggle {
-            position: absolute;
-            right: 8px;
-            background: none;
-            border: none;
-            color: #888;
-            cursor: pointer;
-            padding: 4px;
-            font-size: 14px;
-            opacity: 0.6;
-            transition: opacity 0.2s;
-        }
-
-        .password-toggle:hover {
-            opacity: 1;
-        }
-
-        .model-item-size {
-            font-size: 11px;
-            color: #666;
-        }
-
-        .search-box {
-            position: relative;
-            margin-bottom: 12px;
-        }
-
-        .search-box input {
-            padding-right: 80px;
-        }
-
-        .search-btn {
-            position: absolute;
-            right: 6px;
-            top: 6px;
-            padding: 6px 12px;
-            background: #ff6b35;
-            border: none;
-            border-radius: 6px;
-            color: #fff;
-            font-size: 11px;
-            cursor: pointer;
-        }
-
-        .search-btn:hover {
-            opacity: 0.8;
-        }
-
-        .search-results {
-            display: none;
-            max-height: 150px;
-            overflow-y: auto;
-            border: 1px solid #2a2a2a;
-            border-radius: 8px;
-            margin-top: 8px;
-        }
-
-        .search-results.active {
-            display: block;
-        }
-
-        .search-result-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px;
-            border-bottom: 1px solid #2a2a2a;
-        }
-
-        .search-result-item:last-child {
-            border-bottom: none;
-        }
-
-        .search-result-name {
-            font-size: 13px;
-            color: #e0e0e0;
-        }
-
-        .search-result-desc {
-            font-size: 11px;
-            color: #666;
-        }
-
-        .download-btn {
-            padding: 4px 10px;
-            background: #4ade80;
-            border: none;
-            border-radius: 4px;
-            color: #000;
-            font-size: 10px;
-            cursor: pointer;
-        }
-
-        .download-btn:hover {
-            opacity: 0.8;
-        }
-
-        .download-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .status-text {
-            font-size: 11px;
-            color: #888;
-            margin-top: 4px;
-        }
-
-        .loading-spinner {
-            display: inline-block;
-            width: 12px;
-            height: 12px;
-            border: 2px solid #888;
-            border-top-color: transparent;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* Backroom button */
-        .backroom-btn {
+        .modal-btn {
             width: 100%;
             padding: 12px;
-            background: linear-gradient(135deg, #7c3aed, #a855f7);
-            border: none;
-            border-radius: 10px;
+            background: var(--accent);
             color: #fff;
+            border: none;
+            border-radius: 8px;
             font-size: 14px;
             font-weight: 500;
             cursor: pointer;
+        }
+
+        /* Donation Modal */
+        .donation-buttons {
             display: flex;
-            align-items: center;
-            justify-content: center;
+            flex-direction: column;
             gap: 8px;
-            transition: all 0.2s;
-            margin-top: 12px;
         }
 
-        .backroom-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4);
-        }
-
-        .backroom-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .backroom-btn .spinner {
-            display: none;
-        }
-
-        .backroom-btn.loading .spinner {
-            display: inline-block;
-        }
-
-        .backroom-btn.loading .btn-text {
-            display: none;
-        }
-
-        /* Backroom transcript */
-        .backroom-transcript {
-            margin-top: 12px;
+        .donation-btn {
             padding: 12px;
-            background: #0f0f0f;
+            border: none;
             border-radius: 8px;
-            max-height: 300px;
-            overflow-y: auto;
-        }
-
-        .transcript-message {
-            margin-bottom: 12px;
-            animation: fadeIn 0.3s ease;
-        }
-
-        .transcript-message:last-child {
-            margin-bottom: 0;
-        }
-
-        .transcript-header {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            margin-bottom: 4px;
-        }
-
-        .transcript-name {
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-        .transcript-role {
-            font-size: 10px;
-            color: #666;
-            padding: 2px 6px;
-            background: #1a1a1a;
-            border-radius: 4px;
-        }
-
-        .transcript-text {
-            font-size: 13px;
-            color: #ccc;
-            line-height: 1.5;
-        }
-
-        .transcript-votes {
-            display: flex;
-            gap: 6px;
-            margin-top: 6px;
-        }
-
-        .vote-chip {
-            padding: 4px 8px;
-            background: #1a1a1a;
-            border: 1px solid #2a2a2a;
-            border-radius: 4px;
-            font-size: 11px;
+            font-size: 14px;
+            font-weight: 500;
             cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 4px;
         }
 
-        .vote-chip:hover {
-            border-color: #4ade80;
+        .donation-btn.yes {
+            background: var(--accent);
+            color: #fff;
         }
 
-        .vote-chip.voted-up {
-            background: rgba(74, 222, 128, 0.2);
-            border-color: #4ade80;
-            color: #4ade80;
+        .donation-btn.no {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
         }
 
-        .vote-chip.voted-down {
-            background: rgba(239, 68, 68, 0.2);
-            border-color: #ef4444;
-            color: #ef4444;
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
         }
 
-        /* Typing cursor effect */
-        .typing-cursor {
-            display: inline-block;
-            width: 2px;
-            height: 14px;
-            background: #888;
-            animation: blink 0.8s infinite;
-            margin-left: 2px;
+        ::-webkit-scrollbar-track {
+            background: var(--bg-primary);
         }
 
-        @keyframes blink {
-            0%, 50% { opacity: 1; }
-            51%, 100% { opacity: 0; }
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
         }
 
-        /* Responsive - Mobile: PRD stacks below chat */
-        @media (max-width: 900px) {
-            .bmc-link {
-                position: relative;
-                top: auto;
-                left: auto;
-                margin: 8px 12px;
-            }
-
-            .chat-header-left {
-                margin-left: 0;
-            }
-
-            .split-container {
-                flex-direction: column;
-            }
-
-            .chat-panel {
-                max-width: none;
-                min-height: 50vh;
-                border-right: none;
-                border-bottom: 1px solid #2a2a2a;
-            }
-
-            .prd-panel {
-                min-width: 100%;
-                min-height: 50vh;
-                border-top: 1px solid #2a2a2a;
-            }
-
-            .prd-editor {
-                font-size: 11px;
-                padding: 12px;
-            }
-        }
-
-        /* Small mobile optimization */
-        @media (max-width: 600px) {
-            .chat-header {
-                flex-wrap: wrap;
-                gap: 8px;
-            }
-
-            .chat-header-left {
-                flex: 1;
-                min-width: 200px;
-            }
-
-            .chat-header-right {
-                width: 100%;
-                justify-content: flex-end;
-            }
-
-            .messages-container {
-                padding: 12px;
-            }
-
-            .message {
-                margin-bottom: 12px;
-            }
-
-            .prd-editor {
-                font-size: 10px;
-                padding: 10px;
-            }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-secondary);
         }
     </style>
 </head>
 <body>
-    <div class="split-container">
-        <!-- Left Panel - Chat -->
-        <div class="chat-panel">
-            <div class="chat-header">
-                <div class="chat-header-left">
-                    <div class="ralph-avatar">R</div>
-                    <div class="chat-title">
-                        <h1>Ralph</h1>
-                        <span>Mr. Worms</span>
-                        <div class="prd-title" id="prdTitle"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Drag & Drop Zone (hidden by default, shows on file drag) -->
-            <div class="drop-zone-overlay" id="dropZoneOverlay">
-                <div class="drop-zone-content">
-                    <div class="drop-zone-icon">📄</div>
-                    <div class="drop-zone-text">Drop your PRD to continue working</div>
-                    <div class="drop-zone-subtext">Supports: .txt, .json, .md</div>
-                </div>
-            </div>
-
-            <div class="messages-container" id="messagesContainer">
-                {% if not messages %}
-                <div class="welcome-screen">
-                    <h2 id="welcomeTitle">Good evening, Mr. Worms.</h2>
-                    <p>Let's get planning.</p>
-                </div>
-                {% endif %}
-
-                {% for msg in messages %}
-                <div class="message {{ msg.role }}">
-                    <div class="message-avatar">{{ 'R' if msg.role == 'assistant' else 'U' }}</div>
-                    <div>
-                        <div class="message-bubble">{{ msg.content | safe }}</div>
-
-                        {% if msg.backroom %}
-                        <div class="backroom-debate">
-                            <div class="backroom-header">🎭 The Backroom Debate</div>
-                            <div class="analyst-message">
-                                <span class="analyst-emoji">🤔</span>
-                                <span class="analyst-name">Stool:</span>
-                                <span class="analyst-text">{{ msg.backroom.stool }}</span>
-                            </div>
-                            <div class="analyst-message">
-                                <span class="analyst-emoji">💡</span>
-                                <span class="analyst-name">Gomer:</span>
-                                <span class="analyst-text">{{ msg.backroom.gomer }}</span>
-                            </div>
-                        </div>
-                        {% endif %}
-
-                        {% if msg.suggestions %}
-                        <div class="message-actions">
-                            {% for sugg in msg.suggestions %}
-                            <div class="suggestion-item">
-                                <span class="suggestion-text">{{ sugg.text or sugg.label }}</span>
-                                <div class="vote-buttons">
-                                    <button class="vote-btn up" onclick="voteSuggestion('{{ sugg.id }}', 'up')">👍</button>
-                                    <button class="vote-btn down" onclick="voteSuggestion('{{ sugg.id }}', 'down')">👎</button>
-                                </div>
-                            </div>
-                            {% endfor %}
-                        </div>
-                        {% endif %}
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-
-            <div style="padding: 0 12px;">
-                <button id="backroomBtn" class="backroom-btn" onclick="startBackroomDebate()">
-                    <span class="spinner loading-spinner"></span>
-                    <span class="btn-text">🎭 Listen to the Backroom Conversation</span>
-                </button>
-                <div id="backroomTranscript" class="backroom-transcript" style="display: none;"></div>
-            </div>
-
-            <div class="input-area">
-                <div class="input-wrapper">
-                    <textarea
-                        id="chatInput"
-                        class="chat-input"
-                        placeholder="Message Ralph..."
-                        rows="1"
-                        onkeydown="handleKeyDown(event)"
-                        oninput="autoResize(this)"></textarea>
-                    <button id="sendBtn" class="send-btn" onclick="sendMessage()" disabled>
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <line x1="22" y1="2" x2="11" y2="13"></line>
-                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                        </svg>
-                    </button>
-                </div>
-            </div>
+    <!-- API Key Modal -->
+    <div class="modal-overlay" id="apiKeyModal">
+        <div class="modal">
+            <h3>🔑 Groq API Key</h3>
+            <p>Enter your free Groq API key to continue. Get it at console.groq.com</p>
+            <input type="password" class="api-input" id="apiKeyInput" placeholder="gsk_...">
+            <button class="modal-btn" onclick="saveApiKey()">Start</button>
         </div>
+    </div>
 
-        <!-- Right Panel - Live PRD Editor -->
-        <div class="prd-panel">
-            <div class="prd-header">
-                <div class="prd-header-actions">
-                    <button class="header-btn" onclick="copyPRD()">📋 Copy PRD</button>
-                </div>
-            </div>
-
-            <div class="prd-editor-container">
-                {% if initial_prd %}
-                <textarea
-                    id="prdEditor"
-                    class="prd-editor"
-                    spellcheck="false"
-                    oninput="onPRDEdit()">{{ initial_prd }}</textarea>
-                {% else %}
-                <div class="prd-placeholder" id="prdPlaceholder">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                        <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    </svg>
-                    <h3>Your PRD will appear here</h3>
-                    <p>Start chatting with Ralph to build your PRD</p>
-                    <p style="margin-top: 8px; color: #555;">Includes full "How to Ralph" legend at top</p>
-                </div>
-                <textarea
-                    id="prdEditor"
-                    class="prd-editor"
-                    style="display: none;"
-                    spellcheck="false"
-                    oninput="onPRDEdit()"></textarea>
-                {% endif %}
+    <!-- Donation Modal -->
+    <div class="modal-overlay" id="donationModal">
+        <div class="modal">
+            <h3 style="color: var(--accent);">Hot dog! Look at you go!</h3>
+            <p id="donationMessage" style="color: var(--text-primary); line-height: 1.6;"></p>
+            <div class="donation-buttons">
+                <button class="donation-btn yes" onclick="donateYes()">Yes, I'll support</button>
+                <button class="donation-btn no" onclick="donateNo()">No thanks</button>
             </div>
         </div>
     </div>
 
+    <!-- Chat Section -->
+    <div class="chat-section">
+        <div class="chat-header">
+            <div class="chat-title">prplbry</div>
+            <button class="mode-toggle" onclick="toggleMode()" id="modeBtn">☀️ Day</button>
+        </div>
+
+        <div class="messages" id="messages">
+            <div class="message assistant">
+                Good evening. Let's plan.<br><br>
+                What are we building today?
+            </div>
+        </div>
+
+        <div class="input-area">
+            <input type="text" class="chat-input" id="chatInput" placeholder="Type your message..." onkeypress="handleKeyPress(event)">
+            <button class="send-btn" id="sendBtn" onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <!-- PRD Section -->
+    <div class="prd-section">
+        <div class="prd-header">
+            <span class="prd-title-text" id="prdTitle"></span>
+            <button class="copy-btn" onclick="copyPRD()">Copy</button>
+        </div>
+        <textarea class="prd-editor" id="prdEditor" readonly placeholder="Your PRD will appear here as we chat..."></textarea>
+    </div>
+
     <script>
-        const messagesContainer = document.getElementById('messagesContainer');
-        const chatInput = document.getElementById('chatInput');
-        const sendBtn = document.getElementById('sendBtn');
-        const prdEditor = document.getElementById('prdEditor');
-        const prdPlaceholder = document.getElementById('prdPlaceholder');
-        const dropZoneOverlay = document.getElementById('dropZoneOverlay');
-        let sessionId = '{{ session_id or "" }}';
+        let sessionId = '{{ session_id }}' || generateUUID();
+        let groqApiKey = sessionStorage.getItem('groqApiKey') || '';
+        let donationRefusals = 0;
+        const MAX_DONATION_REQUESTS = 2;
+        const GROQ_MODEL = 'llama-3.3-70b-versatile';
 
-        // Drag & Drop PRD Upload
-        const chatPanel = document.querySelector('.chat-panel');
-
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            document.body.addEventListener(eventName, preventDefaults, false);
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!groqApiKey) {
+                document.getElementById('apiKeyModal').classList.add('active');
+            } else {
+                loadChatHistory();
+            }
         });
 
-        function preventDefaults(e) {
-            e.preventDefault();
-            e.stopPropagation();
+        function generateUUID() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+                const r = Math.random() * 16 | 0;
+                return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+            });
         }
 
-        // Show drop zone on file drag
-        document.body.addEventListener('dragenter', (e) => {
-            if (e.dataTransfer.types.includes('Files')) {
-                dropZoneOverlay.classList.add('active');
-            }
-        });
-
-        document.body.addEventListener('dragleave', (e) => {
-            if (e.target === dropZoneOverlay) {
-                dropZoneOverlay.classList.remove('active');
-            }
-        });
-
-        // Handle file drop
-        document.body.addEventListener('drop', async (e) => {
-            dropZoneOverlay.classList.remove('active');
-
-            const files = e.dataTransfer.files;
-            if (files.length > 0) {
-                const file = files[0];
-                await handlePRDUpload(file);
-            }
-        });
-
-        async function handlePRDUpload(file) {
-            try {
-                const text = await file.text();
-
-                // Send PRD to server for restoration
-                const response = await fetch('/api/prd/restore', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        session_id: sessionId,
-                        prd_content: text,
-                        filename: file.name
-                    })
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    // Reload page with restored session
-                    window.location.href = `/chat/${data.session_id}`;
-                } else {
-                    alert('Failed to restore PRD: ' + (data.error || 'Unknown error'));
-                }
-            } catch (error) {
-                console.error('Upload error:', error);
-                alert('Failed to read file. Please try again.');
+        function saveApiKey() {
+            const key = document.getElementById('apiKeyInput').value.trim();
+            if (key && key.startsWith('gsk_')) {
+                groqApiKey = key;
+                sessionStorage.setItem('groqApiKey', key);
+                document.getElementById('apiKeyModal').classList.remove('active');
+                loadChatHistory();
+            } else {
+                alert('Please enter a valid Groq API key (starts with gsk_)');
             }
         }
 
-        // Auto-resize textarea
-        function autoResize(textarea) {
-            textarea.style.height = 'auto';
-            textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+        function toggleMode() {
+            document.body.classList.toggle('light-mode');
+            const btn = document.getElementById('modeBtn');
+            if (document.body.classList.contains('light-mode')) {
+                btn.textContent = '🌙 Dark';
+            } else {
+                btn.textContent = '☀️ Day';
+            }
         }
 
-        function handleKeyDown(e) {
+        function handleKeyPress(e) {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
                 sendMessage();
             }
         }
 
-        function sendSuggestion(text) {
-            chatInput.value = text;
-            sendMessage();
-        }
-
-        function setGender(gender) {
-            currentGender = gender;
-
-            // Update buttons
-            document.getElementById('maleBtn').classList.toggle('active', gender === 'male');
-            document.getElementById('femaleBtn').classList.toggle('active', gender === 'female');
-
-            // Update display
-            if (gender === 'female') {
-                genderDisplay.textContent = 'Mrs. Worms';
-                if (welcomeTitle) welcomeTitle.textContent = 'Good evening, Mrs. Worms!';
-            } else {
-                genderDisplay.textContent = 'Mr. Worms';
-                if (welcomeTitle) welcomeTitle.textContent = 'Good evening, Mr. Worms!';
-            }
-
-            // Send to server
-            fetch('/api/chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    session_id: sessionId,
-                    gender_toggle: gender
-                })
-            }).then(r => r.json()).then(data => {
-                sessionId = data.session_id || sessionId;
-            });
-        }
-
-        function voteSuggestion(suggestionId, vote) {
-            // Send vote to server
-            fetch('/api/chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    session_id: sessionId,
-                    suggestion_id: suggestionId,
-                    vote: vote
-                })
-            }).then(r => r.json()).then(data => {
-                sessionId = data.session_id || sessionId;
-
-                // Add assistant response
-                addMessage('assistant', data.message, [], data.actions || []);
-
-                // Update PRD editor if preview available
-                if (data.prd_preview) {
-                    updatePRDEditor(data.prd_preview);
-                }
-            });
-
-            // Disable the voted buttons
-            event.target.classList.add('voted');
-            event.target.parentElement.querySelector('.vote-btn.' + (vote === 'up' ? 'down' : 'up')).style.display = 'none';
-        }
-
-        function addMessage(role, content, actions = [], backroom = null, suggestions = []) {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${role}`;
-
-            const avatar = document.createElement('div');
-            avatar.className = 'message-avatar';
-            avatar.textContent = role === 'assistant' ? 'R' : 'U';
-
-            let innerContent = `<div class="message-bubble">${content.replace(/\n/g, '<br>').replace(/\*([^*]+)\*/g, '<em>$1</em>')}</div>`;
-
-            // Add backroom debate if present
-            if (backroom) {
-                innerContent += `
-                    <div class="backroom-debate">
-                        <div class="backroom-header">🎭 The Backroom Debate</div>
-                        <div class="analyst-message">
-                            <span class="analyst-emoji">🤔</span>
-                            <span class="analyst-name">Stool:</span>
-                            <span class="analyst-text">${backroom.stool}</span>
-                        </div>
-                        <div class="analyst-message">
-                            <span class="analyst-emoji">💡</span>
-                            <span class="analyst-name">Gomer:</span>
-                            <span class="analyst-text">${backroom.gomer}</span>
-                        </div>
-                    </div>
-                `;
-            }
-
-            // Add suggestions if present
-            if (suggestions && suggestions.length > 0) {
-                innerContent += '<div class="message-actions">';
-                suggestions.forEach(s => {
-                    innerContent += `
-                        <div class="suggestion-item">
-                            <span class="suggestion-text">${s.text || s.label}</span>
-                            <div class="vote-buttons">
-                                <button class="vote-btn up" onclick="voteSuggestion('${s.id}', 'up')">👍</button>
-                                <button class="vote-btn down" onclick="voteSuggestion('${s.id}', 'down')">👎</button>
-                            </div>
-                        </div>
-                    `;
-                });
-                innerContent += '</div>';
-            }
-
-            // Add action buttons if present
-            if (actions && actions.length > 0) {
-                innerContent += `
-                    <div class="message-actions">
-                        ${actions.map(a => `<button class="action-btn" onclick="handleAction(${JSON.stringify(a)})">${a.label}</button>`).join('')}
-                    </div>
-                `;
-            }
-
-            const contentDiv = document.createElement('div');
-            contentDiv.innerHTML = innerContent;
-
-            messageDiv.appendChild(avatar);
-            messageDiv.appendChild(contentDiv);
-            messagesContainer.appendChild(messageDiv);
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        }
-
-        function showTyping() {
-            const typingDiv = document.createElement('div');
-            typingDiv.className = 'message assistant';
-            typingDiv.id = 'typingIndicator';
-
-            const avatar = document.createElement('div');
-            avatar.className = 'message-avatar';
-            avatar.textContent = 'R';
-
-            const contentDiv = document.createElement('div');
-            contentDiv.innerHTML = '<div class="typing-indicator"><span></span><span></span><span></span></div>';
-
-            typingDiv.appendChild(avatar);
-            typingDiv.appendChild(contentDiv);
-            messagesContainer.appendChild(typingDiv);
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        }
-
-        function hideTyping() {
-            const typing = document.getElementById('typingIndicator');
-            if (typing) typing.remove();
-        }
-
-        function updatePRDEditor(prdJson) {
-            // Show editor, hide placeholder
-            if (prdPlaceholder) prdPlaceholder.style.display = 'none';
-            prdEditor.style.display = 'block';
-
-            // Update editor content
-            prdEditor.value = prdJson;
-
-            // Auto-scroll to bottom
-            prdEditor.scrollTop = prdEditor.scrollHeight;
-
-            // Update status
-            prdStatus.textContent = 'Building PRD';
-            prdStatus.className = 'status-badge building';
-        }
-
-        function handleAction(action) {
-            if (action.type === 'github_yes') {
-                sendMessage('/github_yes');
-            } else if (action.type === 'github_no') {
-                sendMessage('/github_no');
-            } else if (action.type === 'generate_prd') {
-                sendMessage('/generate_prd');
-            } else if (action.type === 'export') {
-                if (action.format === 'copy_all') copyPRD();
-                else if (action.format === 'json') downloadJSON();
-                else if (action.format === 'markdown') downloadMarkdown();
-            }
-        }
-
-        function onPRDEdit() {
-            // Mark PRD as modified when user edits
-            prdStatus.textContent = 'Modified';
-            prdStatus.className = 'status-badge';
-            prdStatus.style.background = 'rgba(255, 200, 0, 0.2)';
-            prdStatus.style.color = '#ffc800';
-        }
-
-        async function sendMessage(text) {
-            const message = text || chatInput.value.trim();
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
             if (!message) return;
 
             // Add user message
             addMessage('user', message);
-            chatInput.value = '';
-            chatInput.style.height = 'auto';
-            sendBtn.disabled = true;
+            input.value = '';
 
-            // Show typing
-            showTyping();
+            // Disable send
+            document.getElementById('sendBtn').disabled = true;
 
             try {
                 const response = await fetch('/api/chat', {
@@ -1769,1381 +469,99 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         message: message,
-                        session_id: sessionId
+                        session_id: sessionId,
+                        grok_api_key: groqApiKey
                     })
                 });
 
                 const data = await response.json();
                 sessionId = data.session_id || sessionId;
 
-                hideTyping();
+                // Add assistant message
+                if (data.message) {
+                    addMessage('assistant', data.message);
+                }
 
-                // Add assistant response
-                addMessage('assistant', data.message, data.actions || [], data.backroom, data.suggestions || []);
-
-                // Update PRD editor if preview available
+                // Update PRD
                 if (data.prd_preview) {
-                    updatePRDEditor(data.prd_preview);
+                    document.getElementById('prdEditor').value = data.prd_preview;
                 }
 
-                // Update URL
-                if (data.session_id && data.is_new) {
-                    window.history.pushState({}, '', `/chat/${data.session_id}`);
-                }
-
-                // Update tracked services
-                updateTrackedServices();
-
-                // Update task counter UI
-                updateTaskCounter(data);
-
-                // Update PRD title if available (after ~3rd interaction)
+                // Update title
                 if (data.prd_title) {
-                    updatePRDTitle(data.prd_title);
+                    document.getElementById('prdTitle').textContent = data.prd_title;
                 }
 
-                // Handle donation prompt (Ralph asks at the right time)
+                // Donation prompt
                 if (data.donation_prompt && donationRefusals < MAX_DONATION_REQUESTS) {
                     showDonationPrompt(data.donation_message);
                 }
 
             } catch (error) {
-                hideTyping();
                 addMessage('assistant', '*scratches head*\n\nWell slap my thigh! Something went wrong. Please try again.');
             }
+
+            document.getElementById('sendBtn').disabled = false;
         }
 
-        function showDonationPrompt(message) {
-            const modal = document.createElement('div');
-            modal.id = 'donationModal';
-            modal.style.cssText = `
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background: rgba(0,0,0,0.9);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                z-index: 9999;
-            `;
-
-            modal.innerHTML = `
-                <div style="
-                    background: #0a0a0a;
-                    border: 1px solid #333;
-                    border-radius: 8px;
-                    padding: 40px;
-                    max-width: 500px;
-                    text-align: center;
-                ">
-                    <h2 style="color: #ff6b35; margin-bottom: 16px;">Hot dog! Look at you go!</h2>
-                    <p style="color: #e0e0e0; line-height: 1.6; margin-bottom: 24px; white-space: pre-line;">${message}</p>
-                    <div style="display: flex; gap: 12px; flex-direction: column;">
-                        <button onclick="donateYes()" style="
-                            padding: 14px 24px;
-                            background: #4ade80;
-                            color: #000;
-                            border: none;
-                            border-radius: 6px;
-                            cursor: pointer;
-                            font-size: 14px;
-                            font-weight: 600;
-                        ">Yes, I'll support</button>
-                        <button onclick="donateNo()" style="
-                            padding: 14px 24px;
-                            background: #2a2a2a;
-                            color: #e0e0e0;
-                            border: 1px solid #444;
-                            border-radius: 6px;
-                            cursor: pointer;
-                            font-size: 14px;
-                        ">No thanks</button>
-                    </div>
-                </div>
-            `;
-
-            document.body.appendChild(modal);
-        }
-
-        function donateYes() {
-            document.getElementById('donationModal').remove();
-            window.open('https://buymeacoffee.com/snail3d', '_blank');
-            addMessage('assistant', '*adjusts tie*\n\nWell I\'ll be! Homer\'s gonna be thrilled! You\'re the real deal, {salutation} Worms. Much obliged!');
-        }
-
-        function donateNo() {
-            document.getElementById('donationModal').remove();
-            donationRefusals++;
-            addMessage('assistant', '*nods slowly*\n\nNo sweat at all, {salutation} Worms! You just keep building great stuff. That\'s what matters around here!');
-        }
-
-        function updateTaskCounter(data) {
-            // No more task limits, just show count
-            updateTaskDisplay(`${data.task_count} tasks`, data.task_count, false);
-        }
-
-        function updateTaskDisplay(label, count, isPaid) {
-            // Find or create task counter element
-            let counter = document.getElementById('taskCounter');
-            if (!counter) {
-                counter = document.createElement('div');
-                counter.id = 'taskCounter';
-                counter.style.cssText = `
-                    position: fixed;
-                    bottom: 12px;
-                    right: 12px;
-                    background: ${isPaid ? '#1a3d1a' : '#1a1a1a'};
-                    border: 1px solid ${isPaid ? '#4ade80' : '#333'};
-                    padding: 8px 12px;
-                    border-radius: 6px;
-                    font-size: 11px;
-                    color: ${isPaid ? '#4ade80' : '#888'};
-                    z-index: 1000;
-                `;
-                document.body.appendChild(counter);
-            }
-            counter.textContent = isPaid ? `✓ Unlimited (${count} tasks)` : `${label}`;
-        }
-
-        function showPaymentPrompt(data) {
-            // HARD STOP - payment modal
-            const modal = document.createElement('div');
-            modal.id = 'paymentModal';
-            modal.style.cssText = `
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background: rgba(0,0,0,0.9);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                z-index: 9999;
-            `;
-
-            modal.innerHTML = `
-                <div style="
-                    background: #0a0a0a;
-                    border: 1px solid #333;
-                    border-radius: 8px;
-                    padding: 40px;
-                    max-width: 400px;
-                    text-align: center;
-                ">
-                    <div style="
-                        font-size: 48px;
-                        margin-bottom: 16px;
-                    ">🔥</div>
-
-                    <h2 style="
-                        color: #e0e0e0;
-                        margin-bottom: 12px;
-                        font-size: 18px;
-                        font-weight: 500;
-                    ">You're cooking up some seriously mean sauce</h2>
-
-                    <p style="
-                        color: #808080;
-                        margin-bottom: 28px;
-                        line-height: 1.5;
-                        font-size: 13px;
-                    ">To go further than this we're going to have to charge you.</p>
-
-                    <div style="
-                        background: #1a1a1a;
-                        border: 1px solid #2a2a2a;
-                        border-radius: 6px;
-                        padding: 16px;
-                        margin-bottom: 24px;
-                    ">
-                        <p style="
-                            color: #4ade80;
-                            font-weight: 600;
-                            margin-bottom: 8px;
-                            font-size: 16px;
-                        ">$2.00</p>
-                        <p style="
-                            color: #606060;
-                            font-size: 11px;
-                            line-height: 1.4;
-                        ">(paid once, goes forever)</p>
-                    </div>
-
-                    <div style="display: flex; flex-direction: column; gap: 10px;">
-                        <button onclick="copyPRD(); closePaymentModal();" style="
-                            padding: 14px 24px;
-                            background: #2a2a2a;
-                            color: #e0e0e0;
-                            border: 1px solid #444;
-                            border-radius: 6px;
-                            cursor: pointer;
-                            font-size: 14px;
-                            width: 100%;
-                        ">📋 Copy PRD</button>
-
-                        <button onclick="unlockUnlimited()" style="
-                            padding: 14px 24px;
-                            background: #4ade80;
-                            color: #000;
-                            border: none;
-                            border-radius: 6px;
-                            cursor: pointer;
-                            font-size: 14px;
-                            font-weight: 600;
-                            width: 100%;
-                        ">🔓 Unlock $2</button>
-                    </div>
-                </div>
-            `;
-
-            document.body.appendChild(modal);
-
-            // Disable chat input
-            chatInput.disabled = true;
-            sendBtn.disabled = true;
-        }
-
-        function closePaymentModal() {
-            const modal = document.getElementById('paymentModal');
-            if (modal) modal.remove();
-        }
-
-        function updatePRDTitle(title) {
-            // Update header title
-            const prdTitleEl = document.getElementById('prdTitle');
-            if (prdTitleEl) {
-                prdTitleEl.textContent = title;
-                prdTitleEl.classList.add('visible');
-            }
-            // Update browser tab title
-            document.title = `${title} - prplbry`;
-        }
-
-        async function unlockUnlimited() {
-            try {
-                const response = await fetch('/api/unlock', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        session_id: sessionId,
-                        payment_token: 'demo'  // TODO: Replace with Stripe token
-                    })
-                });
-
-                const data = await response.json();
-                closePaymentModal();
-
-                if (data.success) {
-                    addMessage('assistant', data.message);
-                    updateTaskDisplay('✓ Unlimited', data.task_count, true);
-                }
-            } catch (error) {
-                console.error('Unlock failed:', error);
-            }
+        function addMessage(role, content) {
+            const messagesDiv = document.getElementById('messages');
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${role}`;
+            msgDiv.innerHTML = content.replace(/\n/g, '<br>');
+            messagesDiv.appendChild(msgDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
         }
 
         async function copyPRD() {
+            const prd = document.getElementById('prdEditor').value;
+            if (!prd) {
+                alert('No PRD to copy yet!');
+                return;
+            }
+
+            await navigator.clipboard.writeText(prd);
+            fetch('/api/prd/count', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ session_id: sessionId })
+            }).catch(() => {});
+
+            const btn = document.querySelector('.copy-btn');
+            const originalText = btn.textContent;
+            btn.textContent = '✓ Copied!';
+            setTimeout(() => btn.textContent = originalText, 1500);
+        }
+
+        function showDonationPrompt(message) {
+            document.getElementById('donationMessage').textContent = message;
+            document.getElementById('donationModal').classList.add('active');
+        }
+
+        function donateYes() {
+            document.getElementById('donationModal').classList.remove('active');
+            window.open('https://buymeacoffee.com/snail3d', '_blank');
+            addMessage('assistant', '*adjusts tie*\n\nWell I\'ll be! Homer\'s gonna be thrilled! You\'re the real deal. Much obliged!');
+        }
+
+        function donateNo() {
+            document.getElementById('donationModal').classList.remove('active');
+            donationRefusals++;
+            addMessage('assistant', '*nods slowly*\n\nNo sweat at all! You just keep building great stuff. That\'s what matters around here!');
+        }
+
+        async function loadChatHistory() {
+            // Load existing chat if session exists
             try {
-                await navigator.clipboard.writeText(prdEditor.value);
-                // Track PRD copy (once per session)
-                fetch('/api/prd/count', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ session_id: sessionId })
-                }).catch(() => {});
-                // Visual feedback
-                const btn = document.querySelector('.header-btn');
-                const originalText = btn.textContent;
-                btn.textContent = '✓ Copied!';
-                btn.style.background = '#4ade80';
-                setTimeout(() => {
-                    btn.textContent = originalText;
-                    btn.style.background = '';
-                }, 1500);
-            } catch (e) {
-                console.error('Copy failed:', e);
-                alert('Failed to copy. Please select and copy manually.');
-            }
-        }
-
-        // Reset conversation functions
-        function showResetModal() {
-            document.getElementById('resetModal').classList.add('active');
-        }
-
-        function hideResetModal() {
-            document.getElementById('resetModal').classList.remove('active');
-        }
-
-        async function resetConversation() {
-            hideResetModal();
-
-            try {
-                const response = await fetch('/api/chat/reset', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ session_id: sessionId })
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    // Create new session
-                    sessionId = data.new_session_id;
-                    window.location.href = `/chat/${sessionId}`;
-                }
-            } catch (error) {
-                console.error('Reset failed:', error);
-                alert('Failed to reset conversation. Please try again.');
-            }
-        }
-
-        // Enable/disable send button
-        chatInput.addEventListener('input', () => {
-            sendBtn.disabled = !chatInput.value.trim();
-        });
-
-        // Focus input on load
-        document.addEventListener('DOMContentLoaded', () => {
-            chatInput.focus();
-            loadModelSettings();
-            updateTimeBasedGreeting();
-        });
-
-        function updateTimeBasedGreeting() {
-            const hour = new Date().getHours();
-            let timePeriod;
-
-            if (hour >= 5 && hour < 12) {
-                timePeriod = 'morning';
-            } else if (hour >= 12 && hour < 18) {
-                timePeriod = 'afternoon';
-            } else {
-                timePeriod = 'evening';
-            }
-
-            const welcomeTitle = document.getElementById('welcomeTitle');
-            if (welcomeTitle) {
-                welcomeTitle.textContent = `Good ${timePeriod}, ${gender === 'female' ? 'Mrs.' : 'Mr.'} Worms.`;
-            }
-        }
-
-        // ===== MODEL SETTINGS FUNCTIONS =====
-
-        let currentProvider = 'ollama';
-        let currentModel = '';
-        let grokApiKey = '';
-        let donationRefusals = 0;  // Track how many times they've said no
-        const MAX_DONATION_REQUESTS = 2;  // Stop asking after 2 refusals
-
-        function showSettingsModal() {
-            document.getElementById('settingsModal').classList.add('active');
-            loadOllamaModels();
-        }
-
-        function hideSettingsModal() {
-            document.getElementById('settingsModal').classList.remove('active');
-        }
-
-        function switchProvider(provider) {
-            currentProvider = provider;
-
-            // Update tabs
-            document.querySelectorAll('.provider-tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            event.target.classList.add('active');
-
-            // Update panels
-            document.querySelectorAll('.provider-panel').forEach(panel => {
-                panel.classList.remove('active');
-            });
-            document.getElementById(`${provider}Panel`).classList.add('active');
-
-            if (provider === 'ollama') {
-                loadOllamaModels();
-            }
-        }
-
-        async function loadModelSettings() {
-            // Load saved settings from localStorage
-            const savedProvider = localStorage.getItem('modelProvider') || 'ollama';
-            const savedModel = localStorage.getItem('modelName') || '';
-            const savedApiKey = sessionStorage.getItem('grokApiKey') || '';
-
-            currentModel = savedModel;
-            grokApiKey = savedApiKey;
-
-            // Update UI
-            if (savedModel) {
-                document.getElementById('selectedOllamaModel').value = savedModel;
-            }
-            if (savedApiKey) {
-                document.getElementById('grokApiKeyInput').value = savedApiKey;
-            }
-            if (savedModel) {
-                document.getElementById('grokModelInput').value = savedModel;
-            }
-        }
-
-        async function loadOllamaModels() {
-            try {
-                const response = await fetch('/api/ollama/models');
-                const data = await response.json();
-
-                if (data.models) {
-                    const modelList = document.getElementById('ollamaModelList');
-                    modelList.innerHTML = '';
-
-                    data.models.forEach(model => {
-                        const div = document.createElement('div');
-                        div.className = 'model-item' + (model.name === currentModel ? ' selected' : '');
-                        div.innerHTML = `
-                            <span class="model-item-name">${model.name}</span>
-                            <span class="model-item-size">${formatSize(model.size)}</span>
-                        `;
-                        div.onclick = () => selectOllamaModel(model.name);
-                        modelList.appendChild(div);
-                    });
-
-                    if (data.models.length > 0 && !currentModel) {
-                        selectOllamaModel(data.models[0].name);
-                    }
-                }
-            } catch (error) {
-                console.error('Failed to load Ollama models:', error);
-            }
-        }
-
-        function selectOllamaModel(modelName) {
-            currentModel = modelName;
-            document.getElementById('selectedOllamaModel').value = modelName;
-            localStorage.setItem('modelName', modelName);
-            localStorage.setItem('modelProvider', 'ollama');
-
-            // Update UI
-            document.querySelectorAll('.model-item').forEach(item => {
-                item.classList.remove('selected');
-            });
-            event.target.closest('.model-item')?.classList.add('selected');
-        }
-
-        async function searchOllamaModels() {
-            const query = document.getElementById('ollamaSearchInput').value.trim();
-            if (!query) return;
-
-            const resultsDiv = document.getElementById('ollamaSearchResults');
-            resultsDiv.innerHTML = '<div class="status-text"><span class="loading-spinner"></span> Searching...</div>';
-            resultsDiv.classList.add('active');
-
-            try {
-                const response = await fetch(`/api/ollama/search?q=${encodeURIComponent(query)}`);
-                const data = await response.json();
-
-                resultsDiv.innerHTML = '';
-
-                if (data.models && data.models.length > 0) {
-                    data.models.forEach(model => {
-                        const div = document.createElement('div');
-                        div.className = 'search-result-item';
-                        div.innerHTML = `
-                            <div>
-                                <div class="search-result-name">${model.name}</div>
-                                <div class="search-result-desc">${model.description || 'No description'}</div>
-                            </div>
-                            <button class="download-btn" onclick="pullOllamaModel('${model.name}', this)">
-                                Pull
-                            </button>
-                        `;
-                        resultsDiv.appendChild(div);
-                    });
-                } else {
-                    resultsDiv.innerHTML = '<div class="status-text">No models found</div>';
-                }
-            } catch (error) {
-                resultsDiv.innerHTML = '<div class="status-text">Search failed. Is Ollama running?</div>';
-            }
-        }
-
-        async function pullOllamaModel(modelName, button) {
-            button.disabled = true;
-            button.textContent = 'Pulling...';
-
-            try {
-                const response = await fetch('/api/ollama/pull', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ model: modelName })
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    button.textContent = '✓ Done';
-                    setTimeout(() => {
-                        loadOllamaModels();
-                        document.getElementById('ollamaSearchResults').classList.remove('active');
-                    }, 1000);
-                } else {
-                    button.textContent = 'Failed';
-                    setTimeout(() => button.disabled = false, 2000);
-                }
-            } catch (error) {
-                button.textContent = 'Error';
-                setTimeout(() => button.disabled = false, 2000);
-            }
-        }
-
-        function saveGrokSettings() {
-            const apiKey = document.getElementById('grokApiKeyInput').value;
-            const model = document.getElementById('grokModelInput').value;
-
-            sessionStorage.setItem('grokApiKey', apiKey);
-            localStorage.setItem('modelName', model);
-            localStorage.setItem('modelProvider', 'grok');
-
-            grokApiKey = apiKey;
-            currentModel = model;
-
-            hideSettingsModal();
-            addMessage('assistant', '*adjusts tie*\n\nSettings saved! Now using Grok with model: ' + model);
-        }
-
-        function formatSize(bytes) {
-            if (!bytes) return 'Unknown';
-            const gb = bytes / (1024 * 1024 * 1024);
-            if (gb >= 1) return gb.toFixed(1) + ' GB';
-            const mb = bytes / (1024 * 1024);
-            return mb.toFixed(1) + ' MB';
-        }
-
-        // ===== BACKROOM DEBATE FUNCTIONS =====
-
-        let backroomActive = false;
-
-        async function startBackroomDebate() {
-            if (backroomActive) return;
-
-            const btn = document.getElementById('backroomBtn');
-            const transcript = document.getElementById('backroomTranscript');
-
-            btn.classList.add('loading');
-            btn.disabled = true;
-            backroomActive = true;
-
-            transcript.style.display = 'block';
-            transcript.innerHTML = '<div class="status-text"><span class="loading-spinner"></span> Starting backroom debate...</div>';
-
-            try {
-                const response = await fetch('/api/backroom/debate', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        session_id: sessionId,
-                        context: getCurrentProjectContext()
-                    })
-                });
-
-                const data = await response.json();
-
-                if (data.success && data.debate) {
-                    transcript.innerHTML = '';
-                    await playDebate(data.debate);
-                } else {
-                    transcript.innerHTML = '<div class="status-text">Failed to start debate. Please try again.</div>';
-                }
-            } catch (error) {
-                console.error('Debate error:', error);
-                transcript.innerHTML = '<div class="status-text">Error starting debate. Is the model running?</div>';
-            } finally {
-                btn.classList.remove('loading');
-                btn.disabled = false;
-                backroomActive = false;
-            }
-        }
-
-        function getCurrentProjectContext() {
-            // Get current project context from PRD if available
-            const prdText = prdEditor.value;
-            if (prdText && prdText.length > 100) {
-                return prdText.substring(0, 500);
-            }
-            return "Building a web application";
-        }
-
-        async function playDebate(exchanges) {
-            const transcript = document.getElementById('backroomTranscript');
-            const approvedExchanges = [];
-
-            for (let i = 0; i < exchanges.length; i++) {
-                const exchange = exchanges[i];
-                const messageDiv = document.createElement('div');
-                messageDiv.className = 'transcript-message';
-
-                const analyst = exchange.analyst;
-                const emoji = analyst === 'Stool' ? '🤔' : '💡';
-                const role = analyst === 'Stool' ? 'The Skeptic' : 'The Optimist';
-
-                messageDiv.innerHTML = `
-                    <div class="transcript-header">
-                        <span>${emoji}</span>
-                        <span class="transcript-name">${analyst}</span>
-                        <span class="transcript-role">${role}</span>
-                    </div>
-                    <div class="transcript-text" id="transcript-${i}"><span class="typing-cursor"></span></div>
-                    <div class="transcript-votes" id="votes-${i}">
-                        <span class="vote-chip" onclick="voteBackroom(${i}, 'up', '${exchange.analyst}', '${escapeHtml(exchange.message)}')">
-                            ✓ Add to PRD
-                        </span>
-                        <span class="vote-chip" onclick="voteBackroom(${i}, 'down', '${exchange.analyst}', '${escapeHtml(exchange.message)}')">
-                            ✗ Skip
-                        </span>
-                    </div>
-                `;
-
-                transcript.appendChild(messageDiv);
-
-                // Type out the message letter by letter
-                await typeMessage(exchange.message, `transcript-${i}`);
-
-                // Scroll to bottom
-                transcript.scrollTop = transcript.scrollHeight;
-
-                // Small pause between messages
-                await sleep(1500);
-            }
-
-            // After all exchanges, show summary button
-            showSummaryButton();
-        }
-
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        async function voteBackroom(index, vote, analyst, message) {
-            const votesDiv = document.getElementById(`votes-${index}`);
-            const chips = votesDiv.querySelectorAll('.vote-chip');
-
-            // Disable voting
-            chips.forEach(chip => {
-                chip.style.pointerEvents = 'none';
-                chip.style.opacity = '0.5';
-            });
-
-            if (vote === 'up') {
-                chips[0].classList.add('voted-up');
-
-                // Send to server to add to PRD
-                await addToPRDFromBackroom(analyst, message);
-            } else {
-                chips[1].classList.add('voted-down');
-            }
-        }
-
-        async function addToPRDFromBackroom(analyst, message) {
-            try {
-                const response = await fetch('/api/chat/backroom-add', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        session_id: sessionId,
-                        analyst: analyst,
-                        message: message
-                    })
-                });
-
-                const data = await response.json();
-
-                if (data.success && data.prd_preview) {
-                    updatePRDEditor(data.prd_preview);
-                }
-            } catch (error) {
-                console.error('Failed to add to PRD:', error);
-            }
-        }
-
-        function showSummaryButton() {
-            const transcript = document.getElementById('backroomTranscript');
-
-            // Create button container
-            const btnContainer = document.createElement('div');
-            btnContainer.style.display = 'flex';
-            btnContainer.style.gap = '8px';
-            btnContainer.style.marginTop = '12px';
-
-            // "Summarize and add to PRD" button
-            const summarizeBtn = document.createElement('button');
-            summarizeBtn.className = 'action-btn';
-            summarizeBtn.style.flex = '1';
-            summarizeBtn.style.background = '#4ade80';
-            summarizeBtn.style.color = '#000';
-            summarizeBtn.style.border = 'none';
-            summarizeBtn.textContent = '✨ Summarize & Add to PRD';
-            summarizeBtn.onclick = async () => {
-                summarizeBtn.disabled = true;
-                summarizeBtn.textContent = 'Processing...';
-
-                try {
-                    const response = await fetch('/api/chat/summarize', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ session_id: sessionId })
-                    });
-
+                const response = await fetch(`/api/chat/${sessionId}`);
+                if (response.ok) {
                     const data = await response.json();
-
-                    if (data.success && data.prd_preview) {
-                        updatePRDEditor(data.prd_preview);
-                        summarizeBtn.textContent = '✓ Added to PRD!';
-                        discardBtn.disabled = true;
-                    }
-                } catch (error) {
-                    summarizeBtn.textContent = 'Error - try again';
-                    summarizeBtn.disabled = false;
-                }
-            };
-
-            // "I don't like this one" button
-            const discardBtn = document.createElement('button');
-            discardBtn.className = 'action-btn';
-            discardBtn.style.flex = '1';
-            discardBtn.style.background = '#ef4444';
-            discardBtn.style.color = '#fff';
-            discardBtn.style.border = 'none';
-            discardBtn.textContent = '✗ Dismiss';
-            discardBtn.onclick = () => {
-                transcript.innerHTML = '<div style="text-align: center; color: #888; padding: 20px;">Backroom discussion dismissed</div>';
-            };
-
-            btnContainer.appendChild(summarizeBtn);
-            btnContainer.appendChild(discardBtn);
-            transcript.appendChild(btnContainer);
-            transcript.scrollTop = transcript.scrollHeight;
-        }
-
-        async function typeMessage(text, elementId) {
-            const element = document.getElementById(elementId);
-            const speed = 20; // milliseconds per character
-
-            for (let i = 0; i < text.length; i++) {
-                element.textContent = text.substring(0, i + 1) + ' ';
-                await sleep(speed);
-            }
-
-            element.textContent = text;
-        }
-
-        function sleep(ms) {
-            return new Promise(resolve => setTimeout(resolve, ms));
-        }
-
-        // ===== LAUNCH TERMINAL FUNCTIONS =====
-
-        let launchCloudProvider = 'claude';
-
-        function showLaunchModal() {
-            // Check if PRD is ready
-            const prdText = prdEditor.value;
-            if (!prdText || prdText.length < 100) {
-                alert('Please generate a PRD first before launching a terminal.');
-                return;
-            }
-
-            document.getElementById('launchModal').classList.add('active');
-        }
-
-        function hideLaunchModal() {
-            document.getElementById('launchModal').classList.remove('active');
-        }
-
-        function switchCloudProvider(provider) {
-            launchCloudProvider = provider;
-
-            // Update tabs
-            document.getElementById('claudeTab').classList.remove('active');
-            document.getElementById('glmTab').classList.remove('active');
-            document.getElementById(`${provider}Tab`).classList.add('active');
-
-            // Update panels
-            document.getElementById('claudePanel').classList.remove('active');
-            document.getElementById('glmPanel').classList.remove('active');
-            document.getElementById(`${provider}Panel`).classList.add('active');
-        }
-
-        async function launchTerminal() {
-            const prdContent = prdEditor.value;
-
-            // Get folder and command based on provider
-            let folder, command, glmApiKey;
-
-            if (launchCloudProvider === 'claude') {
-                folder = document.getElementById('launchFolder').value;
-                command = document.getElementById('launchCommand').value || 'claude';
-            } else {
-                folder = document.getElementById('launchFolderGlm').value;
-                command = document.getElementById('launchCommandGlm').value || 'claude';
-                glmApiKey = document.getElementById('glmApiKey').value;
-            }
-
-            if (!folder) {
-                alert('Please enter a project folder path.');
-                return;
-            }
-
-            try {
-                const response = await fetch('/api/terminal/launch', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        prd_content: prdContent,
-                        folder: folder,
-                        cloud_provider: launchCloudProvider,
-                        glm_api_key: glmApiKey || '',
-                        command: command,
-                        session_id: sessionId
-                    })
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    // Save GLM API key for future use
-                    if (launchCloudProvider === 'glm' && glmApiKey) {
-                        sessionStorage.setItem('glmApiKey', glmApiKey);
-                    }
-                    // Save folder paths
-                    localStorage.setItem('lastLaunchFolder', folder);
-                    localStorage.setItem('lastLaunchCommand', command);
-
-                    hideLaunchModal();
-
-                    let message = `✅ ${data.message}\n\nPer-session config created. Terminal is now running with your PRD.`;
-
-                    if (data.env_created && data.tracked_services.length > 0) {
-                        message += `\n\n🔑 **.env file created** with ${data.env_file_count} tracked API keys:\n`;
-                        data.tracked_services.slice(0, 5).forEach(s => {
-                            message += `- ${s.service_name} (${s.env_var})\n`;
-                        });
-                        if (data.tracked_services.length > 5) {
-                            message += `...and ${data.tracked_services.length - 5} more\n`;
-                        }
-                        message += `\nFill in the API key values before running!`;
-                    }
-
-                    addMessage('assistant', message);
-                } else {
-                    alert('Failed to launch terminal: ' + (data.error || 'Unknown error'));
-                }
-            } catch (error) {
-                console.error('Launch error:', error);
-                alert('Failed to launch terminal. Please check the folder path and try again.');
-            }
-        }
-
-        function togglePasswordVisibility(inputId) {
-            const input = document.getElementById(inputId);
-            if (input.type === 'password') {
-                input.type = 'text';
-            } else {
-                input.type = 'password';
-            }
-        }
-
-        // ===== DOWNLOAD SCRIPT FUNCTIONS =====
-
-        async function downloadLaunchScript() {
-            const prdContent = prdEditor.value;
-
-            // Get configuration based on provider
-            let folder, glmApiKey;
-
-            if (launchCloudProvider === 'claude') {
-                folder = document.getElementById('launchFolder').value || '~/my-project';
-            } else {
-                folder = document.getElementById('launchFolderGlm').value || '~/my-project';
-                glmApiKey = document.getElementById('glmApiKey').value || '';
-            }
-
-            // Get platform and GitHub options
-            const platform = document.getElementById('launchPlatform').value;
-            const githubUrl = document.getElementById('githubUrl').value || '';
-            const githubBranch = document.getElementById('githubBranch').value || 'main';
-
-            // Get tracked services
-            let trackedServices = [];
-            try {
-                const servicesResponse = await fetch(`/api/services/tracked?session_id=${sessionId}`);
-                const servicesData = await servicesResponse.json();
-                if (servicesData.success) {
-                    trackedServices = servicesData.services;
+                    // Would load chat history here if endpoint exists
                 }
             } catch (e) {
-                console.warn('Failed to fetch tracked services:', e);
-            }
-
-            try {
-                const response = await fetch('/api/terminal/script', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        prd_content: prdContent,
-                        folder: folder,
-                        cloud_provider: launchCloudProvider,
-                        glm_api_key: glmApiKey,
-                        services: trackedServices,
-                        github_url: githubUrl,
-                        github_branch: githubBranch,
-                        platform: platform
-                    })
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    // Save GLM API key for future use
-                    if (launchCloudProvider === 'glm' && glmApiKey) {
-                        sessionStorage.setItem('glmApiKey', glmApiKey);
-                    }
-
-                    // Show script modal with preview
-                    showScriptModal(data.script, data.filename, data.instructions);
-
-                    // Create downloadable blob
-                    const blob = new Blob([data.script], { type: 'text/plain' });
-                    const url = URL.createObjectURL(blob);
-                    const downloadLink = document.getElementById('downloadScriptLink');
-                    downloadLink.href = url;
-                    downloadLink.download = data.filename;
-
-                    // Clean up object URL when modal closes
-                    downloadLink.onclick = () => {
-                        setTimeout(() => URL.revokeObjectURL(url), 100);
-                    };
-                } else {
-                    alert('Failed to generate script: ' + (data.error || 'Unknown error'));
-                }
-            } catch (error) {
-                console.error('Script generation error:', error);
-                alert('Failed to generate script. Please try again.');
+                // New chat
             }
         }
-
-        function showScriptModal(script, filename, instructions) {
-            const modal = document.getElementById('scriptModal');
-            const preview = document.getElementById('scriptPreview');
-            const instructionsEl = document.getElementById('scriptInstructions');
-
-            // Show first 50 lines in preview
-            const lines = script.split('\n').slice(0, 50);
-            preview.value = lines.join('\n') + (script.split('\n').length > 50 ? '\n\n... (truncated)' : '');
-
-            // Show instructions
-            instructionsEl.textContent = instructions || 'Download and run the script to launch your terminal with the PRD.';
-
-            // Store script for clipboard copy
-            modal.dataset.script = script;
-
-            modal.classList.add('active');
-        }
-
-        function hideScriptModal() {
-            document.getElementById('scriptModal').classList.remove('active');
-        }
-
-        function copyScriptToClipboard() {
-            const modal = document.getElementById('scriptModal');
-            const script = modal.dataset.script;
-
-            if (script) {
-                navigator.clipboard.writeText(script).then(() => {
-                    alert('✅ Script copied to clipboard!');
-                }).catch(err => {
-                    console.error('Failed to copy:', err);
-                    alert('Failed to copy to clipboard. Please select and copy manually.');
-                });
-            }
-        }
-
-        // Claude Dangerously Run Mode
-        function copyDangerCode() {
-            const code = document.getElementById('dangerCode').textContent;
-            navigator.clipboard.writeText(code).then(() => {
-                const el = document.getElementById('dangerCode');
-                const originalText = el.textContent;
-                el.textContent = '✓ Copied!';
-                el.style.background = '#4ade80';
-                el.style.color = '#000';
-                setTimeout(() => {
-                    el.textContent = originalText;
-                    el.style.background = '#1a1a1a';
-                    el.style.color = '#ff6b35';
-                }, 1500);
-            }).catch(err => {
-                console.error('Copy failed:', err);
-            });
-        }
-
-        // Groq API Key Modal
-        function showGroqModal() {
-            document.getElementById('groqModal').classList.add('active');
-        }
-
-        function hideGroqModal() {
-            document.getElementById('groqModal').classList.remove('active');
-        }
-
-        // Drag and drop for folders
-        function setupDragDrop(dropZoneId, inputId) {
-            const dropZone = document.getElementById(dropZoneId);
-            const input = document.getElementById(inputId);
-
-            if (!dropZone || !input) return;
-
-            // Prevent default drag behavior
-            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-                dropZone.addEventListener(eventName, preventDefaults, false);
-                document.body.addEventListener(eventName, preventDefaults, false);
-            });
-
-            function preventDefaults(e) {
-                e.preventDefault();
-                e.stopPropagation();
-            }
-
-            // Highlight drop zone
-            ['dragenter', 'dragover'].forEach(eventName => {
-                dropZone.addEventListener(eventName, () => {
-                    dropZone.classList.add('dragover');
-                }, false);
-            });
-
-            ['dragleave', 'drop'].forEach(eventName => {
-                dropZone.addEventListener(eventName, () => {
-                    dropZone.classList.remove('dragover');
-                }, false);
-            });
-
-            // Handle dropped files
-            dropZone.addEventListener('drop', async (e) => {
-                const items = e.dataTransfer.items;
-
-                for (let i = 0; i < items.length; i++) {
-                    const item = items[i].webkitGetAsEntry();
-
-                    if (item && item.isDirectory) {
-                        // Get the full path from the DataTransferItem
-                        const path = e.dataTransfer.files[i].path;
-                        if (path) {
-                            input.value = path;
-                            dropZone.innerHTML = `
-                                <div class="drop-zone-icon">✅</div>
-                                <div class="drop-zone-text">${path}</div>
-                            `;
-                        }
-                        break;
-                    }
-                }
-            }, false);
-
-            // Click to browse
-            dropZone.addEventListener('click', () => {
-                // Note: folder picker requires input with webkitdirectory attribute
-                // For now, just focus on the text input
-                input.focus();
-            });
-        }
-
-        // Initialize drag-drop when modal opens
-        function initializeDragDrop() {
-            setupDragDrop('launchDropZone', 'launchFolder');
-            setupDragDrop('launchDropZoneGlm', 'launchFolderGlm');
-        }
-
-        // Load saved GLM API key
-        function loadSavedApiKey() {
-            const savedKey = sessionStorage.getItem('glmApiKey');
-            if (savedKey) {
-                document.getElementById('glmApiKey').value = savedKey;
-            }
-
-            const savedFolder = localStorage.getItem('lastLaunchFolder');
-            if (savedFolder) {
-                document.getElementById('launchFolder').value = savedFolder;
-                document.getElementById('launchFolderGlm').value = savedFolder;
-            }
-        }
-
-        // Override showLaunchModal to initialize drag-drop
-        const originalShowLaunchModal = showLaunchModal;
-        showLaunchModal = function() {
-            loadSavedApiKey();
-            initializeDragDrop();
-            originalShowLaunchModal();
-        };
-
-        // ===== SERVICES TRACKER FUNCTIONS =====
-
-        async function updateTrackedServices() {
-            try {
-                const response = await fetch(`/api/services/tracked?session_id=${sessionId}`);
-                const data = await response.json();
-
-                if (data.success) {
-                    displayTrackedServices(data.services);
-                }
-            } catch (error) {
-                console.error('Failed to fetch tracked services:', error);
-            }
-        }
-
-        function displayTrackedServices(services) {
-            const servicesList = document.getElementById('servicesList');
-            const servicesCount = document.getElementById('servicesCount');
-
-            servicesCount.textContent = services.length;
-
-            if (services.length === 0) {
-                servicesList.innerHTML = '<div class="services-empty">No services tracked yet. Mention services in chat to track them.</div>';
-                return;
-            }
-
-            servicesList.innerHTML = services.map(service => `
-                <div class="service-item">
-                    <span class="service-icon">🔑</span>
-                    <span class="service-name">${service.service_name}</span>
-                    <span class="service-env">${service.env_var}</span>
-                </div>
-            `).join('');
-        }
-
-        // Load tracked services on page load
-        document.addEventListener('DOMContentLoaded', () => {
-            updateTrackedServices();
-        });
     </script>
-
-    <!-- Reset Confirmation Modal -->
-    <div class="modal-overlay" id="resetModal">
-        <div class="modal">
-            <h3>🗑️ Reset Conversation?</h3>
-            <p>This will clear all messages and start fresh. Your current PRD will be lost. Are you sure you want to continue?</p>
-            <div class="modal-buttons">
-                <button class="modal-btn cancel" onclick="hideResetModal()">Cancel</button>
-                <button class="modal-btn confirm" onclick="resetConversation()">Yes, Reset</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Model Settings Modal -->
-    <div class="modal-overlay" id="settingsModal">
-        <div class="modal" style="max-width: 500px;">
-            <h3>⚙️ Model Settings</h3>
-
-            <div class="provider-tabs">
-                <button class="provider-tab active" onclick="switchProvider('ollama')">Ollama (Local)</button>
-                <button class="provider-tab" onclick="switchProvider('grok')">Grok API</button>
-            </div>
-
-            <div class="settings-content">
-                <!-- Ollama Panel -->
-                <div id="ollamaPanel" class="provider-panel active">
-                    <div class="form-group">
-                        <label>Currently Selected Model</label>
-                        <input type="text" id="selectedOllamaModel" placeholder="Select a model below" readonly>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Installed Models</label>
-                        <div class="model-list" id="ollamaModelList">
-                            <div class="status-text">Loading...</div>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Search & Download New Models</label>
-                        <div class="search-box">
-                            <input type="text" id="ollamaSearchInput" placeholder="e.g., llama3, mistral, codellama">
-                            <button class="search-btn" onclick="searchOllamaModels()">Search</button>
-                        </div>
-                        <div class="search-results" id="ollamaSearchResults"></div>
-                    </div>
-                </div>
-
-                <!-- Grok Panel -->
-                <div id="grokPanel" class="provider-panel">
-                    <div class="form-group">
-                        <label>Grok API Key</label>
-                        <input type="password" id="grokApiKeyInput" placeholder="Enter your Grok API key">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Model</label>
-                        <input type="text" id="grokModelInput" placeholder="e.g., llama-3.3-70b-versatile">
-                        <div class="status-text" style="margin-top: 4px;">
-                            Available models: llama-3.3-70b-versatile, mixtral-8x7b-32768, gemma2-9b-it
-                        </div>
-                    </div>
-
-                    <div class="modal-buttons">
-                        <button class="modal-btn cancel" onclick="hideSettingsModal()">Cancel</button>
-                        <button class="modal-btn confirm" style="background: #ff6b35;" onclick="saveGrokSettings()">Save Settings</button>
-                    </div>
-                </div>
-            </div>
-
-            <div style="margin-top: 16px; text-align: right;">
-                <button class="modal-btn cancel" onclick="hideSettingsModal()">Close</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Launch Terminal Modal -->
-    <div class="modal-overlay" id="launchModal">
-        <div class="modal" style="max-width: 600px;">
-            <h3>🚀 Launch Terminal</h3>
-            <p style="color: #888; font-size: 13px; margin-bottom: 20px;">
-                Launch a new terminal with the PRD pre-loaded. Per-session config will be created.
-            </p>
-
-            <div class="provider-tabs">
-                <button class="provider-tab active" id="claudeTab" onclick="switchCloudProvider('claude')">Claude</button>
-                <button class="provider-tab" id="glmTab" onclick="switchCloudProvider('glm')">GLM 4.7</button>
-            </div>
-
-            <div class="settings-content">
-                <!-- Claude Panel -->
-                <div id="claudePanel" class="provider-panel active">
-                    <div class="form-group">
-                        <label>Project Folder</label>
-                        <input type="text" id="launchFolder" placeholder="/Users/username/path/to/project" class="drop-input">
-                        <div class="drop-zone" id="launchDropZone">
-                            <div class="drop-zone-icon">📁</div>
-                            <div class="drop-zone-text">Drag & drop a folder here</div>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Command</label>
-                        <input type="text" id="launchCommand" value="claude" placeholder="claude">
-                    </div>
-                </div>
-
-                <!-- GLM Panel -->
-                <div id="glmPanel" class="provider-panel">
-                    <div class="form-group">
-                        <label>GLM API Key</label>
-                        <div class="password-input-wrapper">
-                            <input type="password" id="glmApiKey" placeholder="Enter your GLM API key">
-                            <button class="password-toggle" onclick="togglePasswordVisibility('glmApiKey')" type="button">👁️</button>
-                        </div>
-                        <div class="status-text" style="margin-top: 4px;">Saved persistently for this browser</div>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Project Folder</label>
-                        <input type="text" id="launchFolderGlm" placeholder="/Users/username/path/to/project" class="drop-input">
-                        <div class="drop-zone" id="launchDropZoneGlm">
-                            <div class="drop-zone-icon">📁</div>
-                            <div class="drop-zone-text">Drag & drop a folder here</div>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Command</label>
-                        <input type="text" id="launchCommandGlm" value="claude" placeholder="claude">
-                    </div>
-                </div>
-
-                <!-- Platform & GitHub Section (shared) -->
-                <div style="border-top: 1px solid #333; padding-top: 15px; margin-top: 10px;">
-                    <div class="form-group">
-                        <label>Platform</label>
-                        <select id="launchPlatform" style="width: 100%; padding: 10px; background: #1a1a1a; border: 1px solid #333; color: #e0e0e0; border-radius: 6px;">
-                            <option value="macos">🍎 macOS</option>
-                            <option value="linux">🐧 Linux</option>
-                            <option value="windows">🪟 Windows</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label>GitHub Repository (Optional)</label>
-                        <input type="text" id="githubUrl" placeholder="https://github.com/username/repo" style="width: 100%; padding: 10px; background: #1a1a1a; border: 1px solid #333; color: #e0e0e0; border-radius: 6px;">
-                        <input type="text" id="githubBranch" placeholder="Branch name (default: main)" value="main" style="width: 100%; padding: 10px; background: #1a1a1a; border: 1px solid #333; color: #e0e0e0; border-radius: 6px; margin-top: 8px;">
-                    </div>
-                </div>
-            </div>
-
-            <div class="modal-buttons" style="flex-wrap: wrap; gap: 8px;">
-                <button class="modal-btn cancel" onclick="hideLaunchModal()">Cancel</button>
-                <button class="modal-btn" style="background: #3b82f6;" onclick="downloadLaunchScript()">📥 Download Script</button>
-                <button class="modal-btn confirm" style="background: #ff6b35;" onclick="launchTerminal()">🚀 Launch</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Script Download Modal -->
-    <div class="modal-overlay" id="scriptModal">
-        <div class="modal" style="max-width: 700px;">
-            <h3>📥 Launch Script Ready</h3>
-            <p style="color: #888; font-size: 13px; margin-bottom: 15px;">
-                Your script has been generated! Download it and follow the instructions below.
-            </p>
-
-            <div style="background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 15px; margin-bottom: 15px;">
-                <div style="color: #4ade80; font-weight: 600; margin-bottom: 8px;">📋 Instructions:</div>
-                <div id="scriptInstructions" style="color: #aaa; font-size: 13px; line-height: 1.6; white-space: pre-line;"></div>
-            </div>
-
-            <div class="form-group">
-                <label>Script Preview (first 50 lines)</label>
-                <textarea id="scriptPreview" readonly style="width: 100%; height: 200px; padding: 12px; background: #0a0a0a; border: 1px solid #333; color: #0f0; font-family: 'Monaco', 'Menlo', monospace; font-size: 11px; border-radius: 6px; resize: vertical;"></textarea>
-            </div>
-
-            <div class="modal-buttons">
-                <button class="modal-btn cancel" onclick="hideScriptModal()">Close</button>
-                <button class="modal-btn confirm" style="background: #4ade80;" onclick="copyScriptToClipboard()">📋 Copy to Clipboard</button>
-                <a id="downloadScriptLink" class="modal-btn confirm" style="background: #3b82f6; text-decoration: none; display: inline-block;" download>💾 Download File</a>
-            </div>
-        </div>
-    </div>
-
-    <!-- Claude Dangerously Run Mode Footer -->
-    <div class="danger-footer">
-        <code class="danger-code" id="dangerCode" onclick="copyDangerCode()">claude --skip-dangerously</code>
-        <span class="danger-label">Claude Dangerously Run Mode</span>
-    </div>
-
-    <!-- Groq API Key Help Modal -->
-    <div class="modal-overlay" id="groqModal">
-        <div class="modal" style="max-width: 500px;">
-            <h3>🔑 Get Your Free Groq API Key</h3>
-            <p style="color: #888; font-size: 13px; margin-bottom: 20px;">
-                prplbry uses Groq's free API for AI. Get your key in 30 seconds:
-            </p>
-
-            <div style="background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 16px; margin-bottom: 20px;">
-                <ol style="color: #a0a0a0; font-size: 13px; line-height: 1.8; padding-left: 20px;">
-                    <li>Go to <a href="https://groq.com" target="_blank" style="color: #4ade80;">groq.com</a></li>
-                    <li>Sign up for free account</li>
-                    <li>Go to <strong>API Keys</strong> in dashboard</li>
-                    <li>Click <strong>Create API Key</strong></li>
-                    <li>Copy the key (starts with <code>gsk_</code>)</li>
-                    <li>Paste it below and you're ready!</li>
-                </ol>
-            </div>
-
-            <div class="modal-buttons">
-                <button class="modal-btn cancel" onclick="hideGroqModal()">Close</button>
-                <a href="https://groq.com" target="_blank" class="modal-btn confirm" style="background: #4ade80; text-decoration: none; display: inline-block;">Go to Groq →</a>
-            </div>
-        </div>
-    </div>
-
 </body>
 </html>
