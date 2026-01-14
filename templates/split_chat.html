@@ -331,20 +331,36 @@
         }
 
         .dangerous-cmd {
+            font-family: 'SF Mono', Monaco, monospace;
             font-size: 10px;
             color: var(--text-secondary);
-            font-family: 'SF Mono', Monaco, monospace;
             background: var(--bg-tertiary);
-            padding: 4px 10px;
+            border: 1px solid var(--border);
             border-radius: 4px;
+            padding: 4px 10px;
+            cursor: pointer;
+            transition: all 0.2s;
             letter-spacing: -0.2px;
-            opacity: 0.7;
+            opacity: 0.8;
             white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .dangerous-cmd:hover {
+            opacity: 1;
+            background: var(--border);
         }
 
         .dangerous-cmd code {
             color: var(--accent);
             font-size: 10px;
+        }
+
+        .dangerous-cmd .copy-icon {
+            font-size: 8px;
+            opacity: 0.5;
         }
 
         @media (max-width: 600px) {
@@ -764,7 +780,9 @@
     <div class="prd-section">
         <div class="prd-header">
             <span class="prd-title-text" id="prdTitle"></span>
-            <span class="dangerous-cmd">then <code>claude --dangerously-skip-permissions</code></span>
+            <span class="dangerous-cmd" onclick="copyCommand()" title="Click to copy command">
+                <code>claude --dangerously-skip-permissions</code>
+            </span>
             <button class="copy-btn" onclick="copyPRD()">Copy</button>
         </div>
         <textarea class="prd-editor" id="prdEditor" readonly placeholder="Your PRD will appear here as we chat..."></textarea>
@@ -992,6 +1010,19 @@
                 btn.textContent = originalText;
                 btn.classList.remove('copied');
             }, 5000);
+        }
+
+        async function copyCommand() {
+            const command = 'claude --dangerously-skip-permissions';
+            await navigator.clipboard.writeText(command);
+
+            const cmdEl = document.querySelector('.dangerous-cmd');
+            const originalHTML = cmdEl.innerHTML;
+            cmdEl.innerHTML = '<code>✓ Copied!</code>';
+
+            setTimeout(() => {
+                cmdEl.innerHTML = originalHTML;
+            }, 2000);
         }
 
         function showDonationPrompt(message) {
