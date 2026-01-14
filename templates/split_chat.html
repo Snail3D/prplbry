@@ -179,36 +179,36 @@
 
         .message.assistant {
             align-self: flex-start;
-            background: #a855f7;
+            background: var(--accent);
             color: #fff;
             box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-            animation: purpleToOrange 5s ease-out forwards;
+            animation: orangeToPurple 5s ease-out forwards;
         }
 
-        @keyframes purpleToOrange {
+        @keyframes orangeToPurple {
             0% {
-                background: #a855f7;
+                background: var(--accent);
             }
             100% {
                 background: var(--bg-secondary);
-                border-left: 3px solid var(--accent);
+                border-left: 3px solid #a855f7;
             }
         }
 
         /* Light mode override for assistant messages */
         .light-mode .message.assistant {
-            animation: purpleToOrangeLight 5s ease-out forwards;
+            animation: orangeToPurpleLight 5s ease-out forwards;
         }
 
-        @keyframes purpleToOrangeLight {
+        @keyframes orangeToPurpleLight {
             0% {
-                background: #a855f7;
+                background: var(--accent);
                 color: #fff;
             }
             100% {
-                background: #fff5ed;
+                background: var(--bg-tertiary);
                 color: var(--text-primary);
-                border-left: 3px solid var(--accent);
+                border-left: 3px solid #a855f7;
             }
         }
 
@@ -533,12 +533,12 @@
 
         @keyframes redToOrange {
             0% {
-                background: rgba(231,76,60,0.3);
-                border-left-color: #e74c3c;
+                background: var(--accent);
+                border-left-color: var(--accent);
             }
             100% {
                 background: var(--bg-tertiary);
-                border-left-color: rgba(255,107,53,0.5);
+                border-left-color: #e74c3c;
             }
         }
 
