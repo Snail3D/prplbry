@@ -367,8 +367,8 @@ def ratelimit_handler(e):
 
 @app.route('/')
 def index():
-    """Landing page - redirect to chat."""
-    return redirect(url_for('chat_new'))
+    """Landing page - Full send sauce."""
+    return render_template('minimal.html')
 
 
 @app.route('/create')
