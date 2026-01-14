@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Ralph Mode PRD Creator{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/terminal.css') }}">
+    <style>
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .nav-links a {
+            color: #00ff00;
+            text-decoration: none;
+            margin-left: 20px;
+        }
+
+        .nav-links a:hover {
+            text-decoration: underline;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #00ff00;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            background: #0a0a0a;
+            border: 1px solid #00ff00;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            box-shadow: 0 0 10px #00ff00;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            background: #0a0a0a;
+            border: 1px solid #00ff00;
+            color: #00ff00;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            background: #00ff00;
+            color: #0a0a0a;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .error-message {
+            color: #ff0000;
+            margin: 10px 0;
+        }
+
+        .success-message {
+            color: #00ff00;
+            margin: 10px 0;
+        }
+
+        .loading {
+            display: inline-block;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        .prd-display {
+            background: #0a0a0a;
+            border: 1px solid #00ff00;
+            padding: 20px;
+            margin-top: 20px;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .settings-panel {
+            background: #0a0a0a;
+            border: 1px solid #00ff00;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .settings-row {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .settings-col {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .file-upload {
+            border: 2px dashed #00ff00;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .file-upload:hover {
+            background: rgba(0, 255, 0, 0.1);
+        }
+
+        .file-upload.dragover {
+            background: rgba(0, 255, 0, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="terminal-container">
+        <!-- Terminal Header -->
+        <div class="terminal-header">
+            <div class="terminal-buttons">
+                <span class="terminal-button close"></span>
+                <span class="terminal-button minimize"></span>
+                <span class="terminal-button maximize"></span>
+            </div>
+            <div class="terminal-title">ralph@prd-creator:~$ prd_generator</div>
+        </div>
+
+        <!-- Terminal Body -->
+        <div class="terminal-body">
+            <div class="container">
+                <!-- Navigation -->
+                <div class="header-nav">
+                    <div>
+                        <pre style="margin:0;">
+  ____      _             _____             _             _
+ |  _ \ ___| |_ _ __ ___ |_   _|__ _ __ ___| |__   ___   | |
+ | |_) / _ \ __| '__/ _ \  | |/ _ \ '__/ __| '_ \ / _ \  | |
+ |  _ <  __/ |_| | | (_) | | |  __/ | | (__| | | |  __/  |_|
+ |_| \_\___|\__|_|  \___/  |_|\___|_|  \___|_| |_|\___|  (_)
+                        </pre>
+                    </div>
+                    <nav class="nav-links">
+                        <a href="{{ url_for('index') }}">[HOME]</a>
+                        <a href="{{ url_for('create_prd') }}">[CREATE PRD]</a>
+                        <a href="{{ url_for('list_prds') }}">[LIST PRDS]</a>
+                    </nav>
+                </div>
+
+                <!-- Flash Messages -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="{% if category == 'error' %}error-message{% else %}success-message{% endif %}">
+                                > {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <!-- Main Content -->
+                <main>
+                    {% block content %}{% endblock %}
+                </main>
+            </div>
+        </div>
+
+        <!-- Terminal Footer -->
+        <div class="terminal-footer">
+            <span id="cursor" class="cursor"></span><span id="typed-text"></span>
+        </div>
+    </div>
+
+    <script>
+        // Terminal typing effect
+        const commands = [
+            'Initializing PRD Creator...',
+            'Loading neural networks...',
+            'Calibrating task generators...',
+            'Ready for input.'
+        ];
+
+        let cmdIndex = 0;
+        let charIndex = 0;
+        const typedText = document.getElementById('typed-text');
+        const cursor = document.getElementById('cursor');
+
+        function type() {
+            if (cmdIndex < commands.length) {
+                if (charIndex < commands[cmdIndex].length) {
+                    typedText.textContent += commands[cmdIndex].charAt(charIndex);
+                    charIndex++;
+                    setTimeout(type, 50);
+                } else {
+                    setTimeout(() => {
+                        typedText.textContent = '';
+                        charIndex = 0;
+                        cmdIndex++;
+                        type();
+                    }, 2000);
+                }
+            }
+        }
+
+        // Start typing effect
+        type();
+    </script>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

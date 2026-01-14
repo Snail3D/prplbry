@@ -1,0 +1,82 @@
+{
+  "id": "ee87a661-d877-4ade-9383-aac372808140",
+  "created_at": "2026-01-14T06:51:58.520787",
+  "updated_at": "2026-01-14T06:51:58.522086",
+  "prd": {
+    "pn": "Simple Test",
+    "pd": "A test",
+    "sp": "Build a simple hello world app with Flask.",
+    "ts": {
+      "lang": "Python",
+      "fw": "Flask",
+      "db": "None",
+      "oth": []
+    },
+    "fs": [
+      "app.py",
+      "templates/index.html"
+    ],
+    "p": {
+      "00_security": {
+        "n": "Security",
+        "t": [
+          {
+            "id": "SEC-001",
+            "ti": "Implement secure password hashing using bcrypt.",
+            "d": "Use bcrypt to hash passwords, ensuring user data remains secure.",
+            "f": "security.py",
+            "pr": "critical"
+          }
+        ]
+      },
+      "01_setup": {
+        "n": "Setup",
+        "t": [
+          {
+            "id": "SET-001",
+            "ti": "Create a new Flask project structure.",
+            "d": "Set up the basic directory structure for the application, including templates and static files.",
+            "f": "setup.py",
+            "pr": "high"
+          }
+        ]
+      },
+      "02_core": {
+        "n": "Core",
+        "t": [
+          {
+            "id": "CORE-001",
+            "ti": "Implement a simple data storage system.",
+            "d": "Create a basic database to store user data, using Flask-SQLAlchemy for ORM.",
+            "f": "core.py",
+            "pr": "medium"
+          }
+        ]
+      },
+      "03_api": {
+        "n": "API",
+        "t": [
+          {
+            "id": "API-001",
+            "ti": "Develop a RESTful API endpoint for user registration.",
+            "d": "Create an API endpoint that handles user registration, using Flask-WTF for form handling.",
+            "f": "api.py",
+            "pr": "medium"
+          }
+        ]
+      },
+      "04_test": {
+        "n": "Testing",
+        "t": [
+          {
+            "id": "TEST-001",
+            "ti": "Write unit tests for the application.",
+            "d": "Create a set of unit tests to ensure the application's functionality is correct.",
+            "f": "tests.py",
+            "pr": "high"
+          }
+        ]
+      }
+    }
+  }
+}

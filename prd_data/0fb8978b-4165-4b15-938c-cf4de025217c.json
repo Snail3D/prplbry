@@ -1,0 +1,118 @@
+{
+  "id": "0fb8978b-4165-4b15-938c-cf4de025217c",
+  "created_at": "2026-01-14T06:38:46.131432",
+  "updated_at": "2026-01-14T06:38:46.132620",
+  "prd": {
+    "pn": "Test Todo App",
+    "pd": "A simple todo application",
+    "sp": "Create a simple todo app with Flask where users can add, complete, and delete tasks",
+    "ts": {
+      "lang": "Python",
+      "fw": "Flask",
+      "db": null,
+      "oth": []
+    },
+    "fs": [
+      "file1.py",
+      "file2.py",
+      "templates/index.html"
+    ],
+    "p": {
+      "00_security": {
+        "n": "Security",
+        "t": [
+          {
+            "id": "SEC-001",
+            "ti": "User Authentication",
+            "d": "Implement user authentication using Flask-JWT-Extended",
+            "f": "auth.py",
+            "pr": "critical"
+          },
+          {
+            "id": "SEC-002",
+            "ti": "Data Encryption",
+            "d": "Encrypt sensitive data stored in the database",
+            "f": "encrypt_data.py",
+            "pr": "high"
+          }
+        ]
+      },
+      "01_setup": {
+        "n": "Setup",
+        "t": [
+          {
+            "id": "SET-001",
+            "ti": "Project Structure",
+            "d": "Create a consistent project structure using Flask and Python",
+            "f": "structure.py",
+            "pr": "medium"
+          },
+          {
+            "id": "SET-002",
+            "ti": "Environment Variables",
+            "d": "Configure environment variables for the project",
+            "f": "env_variables.py",
+            "pr": "low"
+          }
+        ]
+      },
+      "02_core": {
+        "n": "Core",
+        "t": [
+          {
+            "id": "CORE-001",
+            "ti": "Task Model",
+            "d": "Design a data model to store task information",
+            "f": "task_model.py",
+            "pr": "critical"
+          },
+          {
+            "id": "CORE-002",
+            "ti": "API Endpoints",
+            "d": "Define API endpoints for adding, completing, and deleting tasks",
+            "f": "api_endpoints.py",
+            "pr": "high"
+          }
+        ]
+      },
+      "03_api": {
+        "n": "API",
+        "t": [
+          {
+            "id": "API-001",
+            "ti": "Task Creation",
+            "d": "Implement API endpoint for creating new tasks",
+            "f": "create_task.py",
+            "pr": "medium"
+          },
+          {
+            "id": "API-002",
+            "ti": "Task Completion",
+            "d": "Implement API endpoint for completing existing tasks",
+            "f": "complete_task.py",
+            "pr": "low"
+          }
+        ]
+      },
+      "04_test": {
+        "n": "Testing",
+        "t": [
+          {
+            "id": "TEST-001",
+            "ti": "Unit Tests",
+            "d": "Write unit tests to ensure task model is working correctly",
+            "f": "unit_tests.py",
+            "pr": "critical"
+          },
+          {
+            "id": "TEST-002",
+            "ti": "Integration Tests",
+            "d": "Write integration tests to ensure API endpoints are working correctly",
+            "f": "integration_tests.py",
+            "pr": "high"
+          }
+        ]
+      }
+    }
+  }
+}
