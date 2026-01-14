@@ -323,15 +323,24 @@
             color: var(--text-secondary);
             font-family: 'SF Mono', Monaco, monospace;
             background: var(--bg-tertiary);
-            padding: 4px 8px;
+            padding: 4px 10px;
             border-radius: 4px;
             letter-spacing: -0.2px;
             opacity: 0.7;
+            white-space: nowrap;
         }
 
         .dangerous-cmd code {
             color: var(--accent);
             font-size: 10px;
+        }
+
+        @media (max-width: 600px) {
+            .dangerous-cmd {
+                white-space: normal;
+                text-align: center;
+                line-height: 1.4;
+            }
         }
 
         .copy-btn {
@@ -743,7 +752,7 @@
     <div class="prd-section">
         <div class="prd-header">
             <span class="prd-title-text" id="prdTitle"></span>
-            <span class="dangerous-cmd">then <code>claude --dangerously</code></span>
+            <span class="dangerous-cmd">then <code>claude --dangerously --skip-permissions</code></span>
             <button class="copy-btn" onclick="copyPRD()">Copy</button>
         </div>
         <textarea class="prd-editor" id="prdEditor" readonly placeholder="Your PRD will appear here as we chat..."></textarea>
