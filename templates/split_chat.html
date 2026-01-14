@@ -190,7 +190,25 @@
                 background: #a855f7;
             }
             100% {
-                background: rgba(255,107,53,0.15);
+                background: var(--bg-secondary);
+                border-left: 3px solid var(--accent);
+            }
+        }
+
+        /* Light mode override for assistant messages */
+        .light-mode .message.assistant {
+            animation: purpleToOrangeLight 5s ease-out forwards;
+        }
+
+        @keyframes purpleToOrangeLight {
+            0% {
+                background: #a855f7;
+                color: #fff;
+            }
+            100% {
+                background: #fff5ed;
+                color: var(--text-primary);
+                border-left: 3px solid var(--accent);
             }
         }
 
