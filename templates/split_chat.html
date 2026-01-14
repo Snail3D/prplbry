@@ -179,9 +179,19 @@
 
         .message.assistant {
             align-self: flex-start;
-            background: var(--bg-secondary);
-            color: var(--text-primary);
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            background: #a855f7;
+            color: #fff;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            animation: purpleToOrange 5s ease-out forwards;
+        }
+
+        @keyframes purpleToOrange {
+            0% {
+                background: #a855f7;
+            }
+            100% {
+                background: rgba(255,107,53,0.15);
+            }
         }
 
         .input-area {
@@ -241,6 +251,16 @@
             cursor: not-allowed;
             transform: none;
             box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .send-btn.typing {
+            background: #a855f7;
+            box-shadow: 0 2px 4px rgba(168,85,247,0.3);
+        }
+
+        .send-btn.typing:hover:not(:disabled) {
+            background: #b874f7;
+            box-shadow: 0 3px 6px rgba(168,85,247,0.35);
         }
 
         .send-btn.fade-out {
@@ -746,6 +766,20 @@
 
         chatInput.addEventListener('blur', () => {
             isCycling = true;
+        });
+
+        // Purple send button when typing
+        chatInput.addEventListener('input', () => {
+            const sendBtn = document.getElementById('sendBtn');
+            if (chatInput.value.trim().length > 0) {
+                sendBtn.classList.add('typing');
+                isCycling = false;
+                sendBtn.textContent = 'Send';
+                sendBtn.title = 'English';
+            } else {
+                sendBtn.classList.remove('typing');
+                isCycling = true;
+            }
         });
 
         function generateUUID() {
