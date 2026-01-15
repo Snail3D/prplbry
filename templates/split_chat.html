@@ -374,73 +374,75 @@
         /* Mobile PRD Collapse Toggle */
         .prd-collapse-toggle {
             display: none;
-            padding: 10px 12px;
+            padding: 12px;
             background: var(--bg-secondary);
             border-bottom: 1px solid var(--border);
             cursor: pointer;
             transition: all 0.3s ease;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: 10px;
         }
 
         .prd-collapse-toggle .toggle-icon {
-            font-size: 14px;
-            transition: transform 0.3s ease;
+            font-size: 18px;
             color: var(--accent);
-        }
-
-        .prd-collapse-toggle .toggle-text {
-            font-size: 11px;
-            color: var(--accent);
-            font-weight: 500;
-        }
-
-        .prd-collapse-toggle.collapsed .toggle-icon {
-            transform: rotate(180deg);
+            flex-shrink: 0;
         }
 
         .prd-collapse-toggle:hover {
             background: var(--bg-tertiary);
         }
 
-        /* Mobile: Collapsed PRD state */
+        /* Mobile PRD Styles */
         @media (max-width: 768px) {
+            /* Show collapse toggle on mobile */
             .prd-collapse-toggle {
                 display: flex;
             }
 
-            .prd-section.collapsed {
+            /* PRD section is collapsed by default on mobile */
+            .prd-section {
                 flex: 0 0 auto;
-                min-height: 0;
                 max-height: 0;
                 overflow: hidden;
+                opacity: 0;
+                transition: all 0.3s ease;
             }
 
-            .prd-section.collapsed .prd-header,
-            .prd-section.collapsed .prd-editor {
+            /* When expanded, show PRD */
+            .prd-section.expanded {
+                max-height: 50vh;
+                opacity: 1;
+                flex: 1;
+            }
+
+            /* Collapse button in header (only shown when expanded) */
+            #mobileCollapseBtn {
                 display: none;
             }
 
-            .prd-section:not(.collapsed) .prd-header {
-                flex-wrap: wrap;
-                gap: 8px;
-            }
-
-            .prd-section:not(.collapsed) #mobileCollapseBtn {
+            .prd-section.expanded #mobileCollapseBtn {
                 display: block;
                 padding: 6px 12px;
                 background: var(--bg-tertiary);
                 border: 1px solid var(--border);
                 border-radius: 6px;
                 color: var(--text-primary);
-                font-size: 14px;
+                font-size: 16px;
                 cursor: pointer;
                 transition: all 0.2s;
             }
 
+            .prd-section.expanded .prd-header {
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            /* Chat gets more space when PRD is collapsed */
             .chat-section {
-                min-height: 70vh;
+                flex: 1;
+                min-height: 60vh;
                 max-height: none;
             }
         }
@@ -942,7 +944,7 @@
     </div>
 
     <!-- Mobile PRD Collapse Toggle -->
-    <div class="prd-collapse-toggle expanded" id="prdCollapseToggle" onclick="togglePRD()">
+    <div class="prd-collapse-toggle" id="prdCollapseToggle" onclick="togglePRD()">
         <span class="toggle-icon">▼</span>
         <span class="dangerous-cmd" onclick="event.stopPropagation(); copyCommand();" title="Click to copy command">
             <code>claude --dangerously-skip-permissions</code>
@@ -1314,18 +1316,17 @@
         function togglePRD() {
             const prdSection = document.getElementById('prdSection');
             const toggle = document.getElementById('prdCollapseToggle');
-            const isCollapsed = prdSection.classList.contains('collapsed');
+            const toggleIcon = toggle.querySelector('.toggle-icon');
+            const isExpanded = prdSection.classList.contains('expanded');
 
-            if (isCollapsed) {
-                // Expand
-                prdSection.classList.remove('collapsed');
-                toggle.classList.remove('collapsed');
-                toggle.classList.add('expanded');
-            } else {
+            if (isExpanded) {
                 // Collapse
-                prdSection.classList.add('collapsed');
-                toggle.classList.remove('expanded');
-                toggle.classList.add('collapsed');
+                prdSection.classList.remove('expanded');
+                toggleIcon.textContent = '▼';
+            } else {
+                // Expand
+                prdSection.classList.add('expanded');
+                toggleIcon.textContent = '▲';
             }
         }
     </script>
