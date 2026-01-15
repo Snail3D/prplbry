@@ -371,6 +371,80 @@
             }
         }
 
+        /* Mobile PRD Collapse Toggle */
+        .prd-collapse-toggle {
+            display: none;
+            padding: 10px 12px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .prd-collapse-toggle .toggle-icon {
+            font-size: 14px;
+            transition: transform 0.3s ease;
+            color: var(--accent);
+        }
+
+        .prd-collapse-toggle .toggle-text {
+            font-size: 11px;
+            color: var(--accent);
+            font-weight: 500;
+        }
+
+        .prd-collapse-toggle.collapsed .toggle-icon {
+            transform: rotate(180deg);
+        }
+
+        .prd-collapse-toggle:hover {
+            background: var(--bg-tertiary);
+        }
+
+        /* Mobile: Collapsed PRD state */
+        @media (max-width: 768px) {
+            .prd-collapse-toggle {
+                display: flex;
+            }
+
+            .prd-section.collapsed {
+                flex: 0 0 auto;
+                min-height: 0;
+                max-height: 0;
+                overflow: hidden;
+            }
+
+            .prd-section.collapsed .prd-header,
+            .prd-section.collapsed .prd-editor {
+                display: none;
+            }
+
+            .prd-section:not(.collapsed) .prd-header {
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .prd-section:not(.collapsed) #mobileCollapseBtn {
+                display: block;
+                padding: 6px 12px;
+                background: var(--bg-tertiary);
+                border: 1px solid var(--border);
+                border-radius: 6px;
+                color: var(--text-primary);
+                font-size: 14px;
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+
+            .chat-section {
+                min-height: 70vh;
+                max-height: none;
+            }
+        }
+
         .copy-btn {
             background: var(--bg-tertiary);
             border: 1px solid var(--border);
@@ -867,14 +941,23 @@
         </div>
     </div>
 
+    <!-- Mobile PRD Collapse Toggle -->
+    <div class="prd-collapse-toggle expanded" id="prdCollapseToggle" onclick="togglePRD()">
+        <span class="toggle-icon">▼</span>
+        <span class="dangerous-cmd" onclick="event.stopPropagation(); copyCommand();" title="Click to copy command">
+            <code>claude --dangerously-skip-permissions</code>
+        </span>
+    </div>
+
     <!-- PRD Section -->
-    <div class="prd-section">
+    <div class="prd-section" id="prdSection">
         <div class="prd-header">
             <span class="prd-title-text" id="prdTitle"></span>
             <span class="dangerous-cmd" onclick="copyCommand()" title="Click to copy command">
                 <code>claude --dangerously-skip-permissions</code>
             </span>
             <button class="copy-btn" onclick="copyPRD()">Copy</button>
+            <button class="copy-btn" onclick="togglePRD()" style="display: none;" id="mobileCollapseBtn">▲</button>
         </div>
         <textarea class="prd-editor" id="prdEditor" readonly placeholder="Your PRD will appear here as we chat..."></textarea>
     </div>
@@ -1225,6 +1308,24 @@
                 }
             } catch (e) {
                 // New chat
+            }
+        }
+
+        function togglePRD() {
+            const prdSection = document.getElementById('prdSection');
+            const toggle = document.getElementById('prdCollapseToggle');
+            const isCollapsed = prdSection.classList.contains('collapsed');
+
+            if (isCollapsed) {
+                // Expand
+                prdSection.classList.remove('collapsed');
+                toggle.classList.remove('collapsed');
+                toggle.classList.add('expanded');
+            } else {
+                // Collapse
+                prdSection.classList.add('collapsed');
+                toggle.classList.remove('expanded');
+                toggle.classList.add('collapsed');
             }
         }
     </script>
