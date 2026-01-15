@@ -927,18 +927,9 @@
             let pressTimer = null;
             let isLongPress = false;
 
-            // Prevent click event after long press
-            sendBtn.addEventListener('click', (e) => {
-                if (isLongPress) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    return false;
-                }
-            }, true); // Use capture phase
-
-            // Mouse events
+            // Mouse events for long-press voice recording
             sendBtn.addEventListener('mousedown', (e) => {
-                if (e.button !== 0) return; // Only left click
+                if (e.button !== 0) return;
                 isLongPress = false;
                 pressTimer = setTimeout(() => {
                     isLongPress = true;
@@ -946,14 +937,14 @@
                 }, 500);
             });
 
-            sendBtn.addEventListener('mouseup', (e) => {
+            const mouseUpHandler = (e) => {
                 clearTimeout(pressTimer);
                 if (isLongPress) {
                     stopRecording(e);
                 }
-                // If not long press, let the onclick handle it
-            });
+            };
 
+            sendBtn.addEventListener('mouseup', mouseUpHandler);
             sendBtn.addEventListener('mouseleave', () => {
                 clearTimeout(pressTimer);
                 if (isLongPress) {
@@ -968,7 +959,7 @@
                     isLongPress = true;
                     startRecording(e);
                 }, 500);
-            });
+            }, { passive: true });
 
             sendBtn.addEventListener('touchend', (e) => {
                 clearTimeout(pressTimer);
@@ -976,8 +967,7 @@
                     e.preventDefault();
                     stopRecording(e);
                 }
-                // If not long press, let the onclick handle it
-            });
+            }, { passive: false });
         }
 
         // Language cycling for send button
