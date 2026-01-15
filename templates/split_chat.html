@@ -74,12 +74,12 @@
             }
 
             .chat-section {
-                min-height: 50vh;
-                max-height: 60vh;
+                min-height: 60vh;
+                max-height: 70vh;
             }
 
             .prd-section {
-                min-height: 40vh;
+                min-height: 30vh;
             }
         }
 
@@ -879,7 +879,7 @@
 
         <div class="input-area">
             <input type="text" class="chat-input" id="chatInput" placeholder="Type your message..." onkeypress="handleKeyPress(event)">
-            <button class="send-btn" id="sendBtn">Send</button>
+            <button class="send-btn" id="sendBtn" onclick="sendMessage()">Send</button>
         </div>
 
         <div class="recording-indicator" id="recordingIndicator">
@@ -927,22 +927,31 @@
             let pressTimer = null;
             let isLongPress = false;
 
+            // Prevent click event after long press
+            sendBtn.addEventListener('click', (e) => {
+                if (isLongPress) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                }
+            }, true); // Use capture phase
+
             // Mouse events
             sendBtn.addEventListener('mousedown', (e) => {
+                if (e.button !== 0) return; // Only left click
                 isLongPress = false;
                 pressTimer = setTimeout(() => {
                     isLongPress = true;
                     startRecording(e);
-                }, 500); // 500ms hold triggers recording
+                }, 500);
             });
 
             sendBtn.addEventListener('mouseup', (e) => {
                 clearTimeout(pressTimer);
                 if (isLongPress) {
                     stopRecording(e);
-                } else {
-                    sendMessage();
                 }
+                // If not long press, let the onclick handle it
             });
 
             sendBtn.addEventListener('mouseleave', () => {
@@ -964,11 +973,10 @@
             sendBtn.addEventListener('touchend', (e) => {
                 clearTimeout(pressTimer);
                 if (isLongPress) {
-                    stopRecording(e);
-                } else {
                     e.preventDefault();
-                    sendMessage();
+                    stopRecording(e);
                 }
+                // If not long press, let the onclick handle it
             });
         }
 
