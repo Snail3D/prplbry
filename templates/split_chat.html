@@ -137,6 +137,11 @@
             box-shadow: inset 0 1px 3px rgba(0,0,0,0.15);
         }
 
+        .mode-toggle:hover {
+            border-color: var(--accent);
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.15), 0 0 0 2px rgba(255,107,53,0.1);
+        }
+
         .mode-toggle::after {
             content: '☀️';
             position: absolute;
@@ -874,12 +879,7 @@
 
         <div class="input-area">
             <input type="text" class="chat-input" id="chatInput" placeholder="Type your message..." onkeypress="handleKeyPress(event)">
-            <button class="send-btn" id="sendBtn" onclick="sendMessage()"
-                    onmousedown="startRecording(event)"
-                    onmouseup="stopRecording(event)"
-                    onmouseleave="stopRecording(event)"
-                    ontouchstart="startRecording(event)"
-                    ontouchend="stopRecording(event)">Send</button>
+            <button class="send-btn" id="sendBtn">Send</button>
         </div>
 
         <div class="recording-indicator" id="recordingIndicator">
@@ -917,7 +917,60 @@
 
             // Start language cycling animation on send button
             startLanguageCycling();
+
+            // Setup send button events (click vs long press)
+            setupSendButton();
         });
+
+        function setupSendButton() {
+            const sendBtn = document.getElementById('sendBtn');
+            let pressTimer = null;
+            let isLongPress = false;
+
+            // Mouse events
+            sendBtn.addEventListener('mousedown', (e) => {
+                isLongPress = false;
+                pressTimer = setTimeout(() => {
+                    isLongPress = true;
+                    startRecording(e);
+                }, 500); // 500ms hold triggers recording
+            });
+
+            sendBtn.addEventListener('mouseup', (e) => {
+                clearTimeout(pressTimer);
+                if (isLongPress) {
+                    stopRecording(e);
+                } else {
+                    sendMessage();
+                }
+            });
+
+            sendBtn.addEventListener('mouseleave', () => {
+                clearTimeout(pressTimer);
+                if (isLongPress) {
+                    stopRecording();
+                }
+            });
+
+            // Touch events
+            sendBtn.addEventListener('touchstart', (e) => {
+                isLongPress = false;
+                pressTimer = setTimeout(() => {
+                    isLongPress = true;
+                    startRecording(e);
+                }, 500);
+            });
+
+            sendBtn.addEventListener('touchend', (e) => {
+                clearTimeout(pressTimer);
+                if (isLongPress) {
+                    stopRecording(e);
+                } else {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+        }
 
         // Language cycling for send button
         const sendButtonTexts = [
@@ -1144,10 +1197,7 @@
         let voiceTranscript = '';
 
         function startRecording(event) {
-            // Only record if it's a long press (left click only)
-            if (event.button !== 0 && event.type !== 'touchstart') return;
-
-            event.preventDefault();
+            // Don't prevent default - let the button setup handle it
             isRecording = true;
             voiceTranscript = '';
 
