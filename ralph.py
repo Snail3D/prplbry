@@ -758,7 +758,6 @@ Include: project purpose, tech stack, features, aesthetics, constraints. Be thor
             time_period = "morning" if 5 <= datetime.now().hour < 12 else "afternoon" if 12 <= datetime.now().hour < 18 else "evening"
             response = (
                 f"Good {time_period}, {self._get_salutation()} Worms. "
-                f"Let's plan.\n\n"
                 f"What are we building today?"
             )
             # Translate response to user's language if needed
@@ -766,15 +765,24 @@ Include: project purpose, tech stack, features, aesthetics, constraints. Be thor
                 response = self._translate_response(response, api_key)
             return response, suggestions, prd_preview
 
-        # Step 1: Got the idea - start building PRD
+        # Step 1: Got the idea - start building PRD immediately
         elif step == 1:
             state["purpose"] = message
-            state["step"] = 2
+            state["step"] = 3  # Skip GitHub question, go straight to tech stack
             state["prd"]["pn"] = self._infer_project_name()
             state["prd"]["pd"] = message[:200]
             state["prd"]["sp"] = message
+            state["github"] = True  # Default to GitHub
+            state["prd"]["gh"] = True
 
-            response = f"Got it. {state['prd']['pn']}.\n\nGitHub or local?"
+            # Add GitHub setup tasks
+            state["prd"]["p"]["01_setup"]["t"] = [
+                {"id": "GH-001", "ti": "Initialize Git repository", "d": "Create git repo and initial commit", "f": "terminal", "pr": "high"},
+                {"id": "GH-002", "ti": "Create GitHub repository", "d": "Set up GitHub repo with README and .gitignore", "f": "github.com", "pr": "high"},
+                {"id": "GH-003", "ti": "Configure GitHub Actions", "d": "Set up CI/CD pipeline for automated testing", "f": ".github/workflows/", "pr": "medium"}
+            ]
+
+            response = f"Got it. **{state['prd']['pn']}**.\n\nTech stack?"
 
             prd_preview = self._update_prd_display()
             return response, suggestions, prd_preview
