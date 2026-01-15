@@ -659,6 +659,97 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.12);
         }
 
+        /* Suggestion Messages (Backroom in chat stream) */
+        .suggestion {
+            align-self: flex-start;
+            background: var(--bg-tertiary);
+            border-radius: 10px;
+            padding: 10px 12px;
+            max-width: 70%;
+            animation: suggestionFadeIn 0.5s ease-out;
+            border-left: 3px solid;
+        }
+
+        .suggestion.stool {
+            border-left-color: #e74c3c;
+        }
+
+        .suggestion.gomer {
+            border-left-color: #27ae60;
+        }
+
+        @keyframes suggestionFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .suggestion-header {
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .stool .suggestion-header {
+            color: #e74c3c;
+        }
+
+        .gomer .suggestion-header {
+            color: #27ae60;
+        }
+
+        .suggestion-text {
+            font-size: 12px;
+            color: var(--text-primary);
+            line-height: 1.5;
+            margin-bottom: 8px;
+        }
+
+        .suggestion-votes {
+            display: flex;
+            gap: 6px;
+        }
+
+        .vote-btn {
+            padding: 4px 10px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--bg-primary);
+            color: var(--text-secondary);
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .vote-btn:hover {
+            background: var(--bg-secondary);
+            transform: translateY(-1px);
+        }
+
+        .vote-btn.voted {
+            background: var(--accent);
+            color: #fff;
+            border-color: var(--accent);
+        }
+
+        .vote-btn.voted:hover {
+            background: var(--accent);
+            transform: none;
+        }
+
         /* Scrollbar */
         ::-webkit-scrollbar {
             width: 6px;
@@ -961,14 +1052,16 @@
                     document.getElementById('prdTitle').textContent = data.prd_title;
                 }
 
+                // Suggestions (thumbs up/down items)
+                if (data.suggestions && data.suggestions.length > 0) {
+                    data.suggestions.forEach(suggestion => {
+                        addSuggestion(suggestion);
+                    });
+                }
+
                 // Donation prompt (only if they haven't said no even once)
                 if (data.donation_prompt && donationRefusals === 0) {
                     showDonationPrompt(data.donation_message);
-                }
-
-                // Backroom debate (Stool vs Gomer)
-                if (data.backroom) {
-                    showBackroom(data.backroom);
                 }
 
             } catch (error) {
@@ -985,6 +1078,68 @@
             msgDiv.innerHTML = content.replace(/\n/g, '<br>');
             messagesDiv.appendChild(msgDiv);
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function addSuggestion(suggestion) {
+            const messagesDiv = document.getElementById('messages');
+            const suggestionDiv = document.createElement('div');
+
+            const typeClass = suggestion.type === 'backroom_stool' ? 'stool' : 'gomer';
+            const emoji = suggestion.type === 'backroom_stool' ? '🔴' : '🟢';
+
+            suggestionDiv.className = `suggestion ${typeClass}`;
+            suggestionDiv.innerHTML = `
+                <div class="suggestion-header">
+                    <span>${emoji}</span>
+                    <span>${suggestion.speaker}</span>
+                </div>
+                <div class="suggestion-text">${suggestion.text}</div>
+                <div class="suggestion-votes">
+                    <button class="vote-btn" onclick="voteSuggestion('${suggestion.id}', 'up', this)">👍 Helpful</button>
+                    <button class="vote-btn" onclick="voteSuggestion('${suggestion.id}', 'down', this)">👎 Skip</button>
+                </div>
+            `;
+
+            messagesDiv.appendChild(suggestionDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        async function voteSuggestion(suggestionId, vote, button) {
+            // Mark the button as voted
+            const parent = button.parentElement;
+            const buttons = parent.querySelectorAll('.vote-btn');
+            buttons.forEach(btn => btn.classList.add('voted'));
+            buttons.forEach(btn => btn.disabled = true);
+
+            button.textContent = vote === 'up' ? '✓ Saved' : '✓ Skipped';
+
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        suggestion_id: suggestionId,
+                        vote: vote,
+                        session_id: sessionId,
+                        grok_api_key: groqApiKey
+                    })
+                });
+
+                const data = await response.json();
+
+                // Add Ralph's response message
+                if (data.message) {
+                    addMessage('assistant', data.message);
+                }
+
+                // Update PRD if changed
+                if (data.prd_preview) {
+                    document.getElementById('prdEditor').value = data.prd_preview;
+                }
+
+            } catch (e) {
+                // Silent fail - voting is optional
+            }
         }
 
         async function copyPRD() {

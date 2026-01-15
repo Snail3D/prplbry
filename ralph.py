@@ -676,12 +676,29 @@ Include: project purpose, tech stack, features, aesthetics, constraints. Be thor
         Returns (stool_message, gomer_message)
         """
         purpose = self.conversation_state.get("purpose", "")
+        project_name = self.conversation_state.get("prd", {}).get("pn", "This project")
 
-        # Generate Stool's skeptical take
-        stool_msg = f"Hmm, {purpose}? I'm wondering about the edge cases here. What if users try to break it?"
+        # Generate Stool's skeptical take (no "I", more summarized)
+        concerns = [
+            f"Edge cases to consider: What happens when users have poor connectivity?",
+            f"Potential performance bottlenecks with {project_name}",
+            f"Security implications of this architecture",
+            f"Scalability concerns as user base grows",
+            f"Error handling strategies needed"
+        ]
 
-        # Generate Gomer's optimistic take
-        gomer_msg = f"But think of the possibilities! {purpose} could really help people get organized."
+        stool_msg = random.choice(concerns)
+
+        # Generate Gomer's optimistic take (no "I", more summarized)
+        opportunities = [
+            f"User experience will be smooth and intuitive",
+            f"This could really solve a real pain point for users",
+            f"The feature set aligns well with market needs",
+            f"Strong potential for viral growth and adoption",
+            f"Technical approach is solid and maintainable"
+        ]
+
+        gomer_msg = random.choice(opportunities)
 
         debate = {
             "stool": stool_msg,
@@ -814,11 +831,30 @@ Include: project purpose, tech stack, features, aesthetics, constraints. Be thor
             # Trigger backroom debate NOW (after some back-and-forth)
             stool_msg, gomer_msg = self._start_backroom_debate()
 
-            response = f"Got it. {message}.\n\nWait... I hear the back room talking about this. Let's listen in.\n\nTell me about the core features."
+            # Add backroom as suggestions that can be voted on
+            stool_id = f"suggest_{int(datetime.now().timestamp() * 1000)}_0"
+            gomer_id = f"suggest_{int(datetime.now().timestamp() * 1000)}_1"
+
+            state["suggestions"] = [
+                {
+                    "id": stool_id,
+                    "text": stool_msg,
+                    "type": "backroom_stool",
+                    "speaker": "Stool (Skeptic)"
+                },
+                {
+                    "id": gomer_id,
+                    "text": gomer_msg,
+                    "type": "backroom_gomer",
+                    "speaker": "Gomer (Optimist)"
+                }
+            ]
+
+            response = f"Got it. {message}.\n\nWait... I hear the back room talking about this. Let's listen in.\n\n(👍👎 Vote on their perspectives below)"
 
             backroom = {"stool": stool_msg, "gomer": gomer_msg}
             prd_preview = self._update_prd_display()
-            return response, suggestions, prd_preview, backroom
+            return response, state["suggestions"], prd_preview, backroom
 
         # Step 4: Got core features
         elif step == 4:
