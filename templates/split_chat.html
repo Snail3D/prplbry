@@ -371,79 +371,18 @@
             }
         }
 
-        /* Mobile PRD Collapse Toggle - HIDDEN on desktop */
-        .prd-collapse-toggle {
-            display: none !important;
-        }
-
         /* Mobile PRD Styles */
         @media (max-width: 768px) {
-            /* Show collapse toggle on mobile ONLY */
-            .prd-collapse-toggle {
-                display: flex !important;
-                padding: 14px 16px;
-                background: var(--bg-secondary);
-                border-bottom: 1px solid var(--border);
-                cursor: pointer;
-                transition: all 0.3s ease;
-                align-items: center;
-                justify-content: center;
-                gap: 12px;
-                position: sticky;
-                bottom: 0;
-                z-index: 10;
-            }
-
-            .prd-collapse-toggle .toggle-icon {
-                font-size: 28px;
-                color: var(--accent);
-                flex-shrink: 0;
-                line-height: 1;
-            }
-
-            .prd-collapse-toggle:hover {
-                background: var(--bg-tertiary);
-            }
-
-            /* PRD section is collapsed by default on mobile */
             .prd-section {
-                flex: 0 0 auto;
-                max-height: 0;
-                overflow: hidden;
-                opacity: 0;
-                transition: all 0.3s ease;
-            }
-
-            /* When expanded, show PRD */
-            .prd-section.expanded {
-                max-height: 50vh;
-                opacity: 1;
                 flex: 1;
+                min-height: 35vh;
+                max-height: 40vh;
             }
 
-            /* Collapse button in header (only shown when expanded) */
-            #mobileCollapseBtn {
-                display: none;
+            .prd-editor {
+                scroll-behavior: smooth;
             }
 
-            .prd-section.expanded #mobileCollapseBtn {
-                display: block;
-                padding: 6px 12px;
-                background: var(--bg-tertiary);
-                border: 1px solid var(--border);
-                border-radius: 6px;
-                color: var(--text-primary);
-                font-size: 20px;
-                cursor: pointer;
-                transition: all 0.2s;
-            }
-
-            .prd-section.expanded .prd-header {
-                flex-wrap: wrap;
-                gap: 8px;
-            }
-
-            /* Chat gets full available space on mobile */
             .chat-section {
                 flex: 1;
                 min-height: 0;
@@ -893,24 +832,6 @@
         </div>
     </div>
 
-    <!-- Backroom Modal -->
-    <div class="modal-overlay" id="backroomModal">
-        <div class="modal">
-            <h3 style="color: var(--accent);">🎧 The Back Room</h3>
-            <div class="backroom-content">
-                <div class="backroom-speaker stool">
-                    <div class="backroom-name">🔴 Stool (Skeptic)</div>
-                    <div class="backroom-message" id="stoolMessage"></div>
-                </div>
-                <div class="backroom-speaker gomer">
-                    <div class="backroom-name">🟢 Gomer (Optimist)</div>
-                    <div class="backroom-message" id="gomerMessage"></div>
-                </div>
-            </div>
-            <button class="backroom-close" onclick="closeBackroom()">Got it, back to work</button>
-        </div>
-    </div>
-
     <!-- Donation Modal -->
     <div class="modal-overlay" id="donationModal">
         <div class="modal">
@@ -936,7 +857,7 @@
         <div class="messages" id="messages">
             <div class="message assistant">
                 Hi, I'm Ralph. I'm your sauce boss. Let's cook. 🍳🔥<br><br>
-                What are we building today?
+                Tell me what you're building.
             </div>
         </div>
 
@@ -944,14 +865,6 @@
             <input type="text" class="chat-input" id="chatInput" placeholder="Type your message..." onkeypress="handleKeyPress(event)">
             <button class="send-btn" id="sendBtn" onclick="sendMessage()">Send</button>
         </div>
-    </div>
-
-    <!-- Mobile PRD Collapse Toggle -->
-    <div class="prd-collapse-toggle" id="prdCollapseToggle" onclick="togglePRD()">
-        <span class="toggle-icon">▼</span>
-        <span class="dangerous-cmd" onclick="event.stopPropagation(); copyCommand();" title="Click to copy command">
-            <code>claude --dangerously-skip-permissions</code>
-        </span>
     </div>
 
     <!-- PRD Section -->
@@ -962,7 +875,6 @@
                 <code>claude --dangerously-skip-permissions</code>
             </span>
             <button class="copy-btn" onclick="copyPRD()">Copy</button>
-            <button class="copy-btn" onclick="togglePRD()" style="display: none;" id="mobileCollapseBtn">▲</button>
         </div>
         <textarea class="prd-editor" id="prdEditor" readonly placeholder="Your PRD will appear here as we chat..."></textarea>
     </div>
@@ -1133,6 +1045,7 @@
                 // Update PRD
                 if (data.prd_preview) {
                     document.getElementById('prdEditor').value = data.prd_preview;
+                    scrollPRDToBottom();
                 }
 
                 // Update title
@@ -1202,7 +1115,7 @@
             button.textContent = vote === 'up' ? '✓ Saved' : '✓ Skipped';
 
             try {
-                const response = await fetch('/api/chat', {
+                await fetch('/api/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -1212,21 +1125,15 @@
                         grok_api_key: groqApiKey
                     })
                 });
-
-                const data = await response.json();
-
-                // Add Ralph's response message
-                if (data.message) {
-                    addMessage('assistant', data.message);
-                }
-
-                // Update PRD if changed
-                if (data.prd_preview) {
-                    document.getElementById('prdEditor').value = data.prd_preview;
-                }
-
             } catch (e) {
                 // Silent fail - voting is optional
+            }
+        }
+
+        function scrollPRDToBottom() {
+            const prdEditor = document.getElementById('prdEditor');
+            if (prdEditor) {
+                prdEditor.scrollTop = prdEditor.scrollHeight;
             }
         }
 
@@ -1313,23 +1220,6 @@
                 }
             } catch (e) {
                 // New chat
-            }
-        }
-
-        function togglePRD() {
-            const prdSection = document.getElementById('prdSection');
-            const toggle = document.getElementById('prdCollapseToggle');
-            const toggleIcon = toggle.querySelector('.toggle-icon');
-            const isExpanded = prdSection.classList.contains('expanded');
-
-            if (isExpanded) {
-                // Collapse
-                prdSection.classList.remove('expanded');
-                toggleIcon.textContent = '▼';
-            } else {
-                // Expand
-                prdSection.classList.add('expanded');
-                toggleIcon.textContent = '▲';
             }
         }
     </script>

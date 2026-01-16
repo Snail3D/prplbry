@@ -677,28 +677,72 @@ Include: project purpose, tech stack, features, aesthetics, constraints. Be thor
         """
         purpose = self.conversation_state.get("purpose", "")
         project_name = self.conversation_state.get("prd", {}).get("pn", "This project")
+        tech_stack = self.conversation_state.get("tech_stack", "")
 
-        # Generate Stool's skeptical take (no "I", more summarized)
-        concerns = [
-            f"Edge cases to consider: What happens when users have poor connectivity?",
-            f"Potential performance bottlenecks with {project_name}",
-            f"Security implications of this architecture",
-            f"Scalability concerns as user base grows",
-            f"Error handling strategies needed"
-        ]
+        # Generate a contextual 4-exchange debate
+        # Exchange 1: Architecture feasibility
+        stool_1 = (
+            f"Architecture concern: With {tech_stack if tech_stack else 'this tech stack'}, "
+            f"how will {project_name} handle concurrent users? Need to think about "
+            f"database connection pooling, caching strategy, and potential race conditions "
+            f"when multiple users interact simultaneously."
+        )
 
-        stool_msg = random.choice(concerns)
+        gomer_1 = (
+            f"Architecture opportunity: Actually, this tech choice is solid for growth. "
+            f"Can implement Redis for caching, use connection pooling, and scale horizontally "
+            f"when needed. The modular design means components can be scaled independently. "
+            f"This gives {project_name} room to grow without major rewrites."
+        )
 
-        # Generate Gomer's optimistic take (no "I", more summarized)
-        opportunities = [
-            f"User experience will be smooth and intuitive",
-            f"This could really solve a real pain point for users",
-            f"The feature set aligns well with market needs",
-            f"Strong potential for viral growth and adoption",
-            f"Technical approach is solid and maintainable"
-        ]
+        # Exchange 2: User experience
+        stool_2 = (
+            f"UX friction points: What happens when things go wrong? Network timeouts, "
+            f"failed operations, edge cases like poor connectivity or browser refreshes. "
+            f"{project_name} needs graceful degradation - users should never see raw errors "
+            f"or lose their work. Error handling isn't an afterthought."
+        )
 
-        gomer_msg = random.choice(opportunities)
+        gomer_2 = (
+            f"UX strength: The core flow is intuitive and focused. Can add optimistic UI "
+            f"updates for responsiveness, implement proper loading states, and use local "
+            f"storage as backup. The simplicity is actually a feature - users get what "
+            f"they need without complexity. Less cognitive load = happier users."
+        )
+
+        # Exchange 3: Security and data
+        stool_3 = (
+            f"Security implications: Need to consider input validation, SQL injection risks, "
+            f"XSS vulnerabilities, authentication security, and data privacy. {project_name} "
+            f"will be handling user data - need rate limiting, proper CSRF protection, and "
+            f"secure session management. Security can't be bolted on later."
+        )
+
+        gomer_3 = (
+            f"Security foundation: This stack has battle-tested security libraries available. "
+            f"Can implement middleware for validation, use parameterized queries, add proper "
+            f"CORS policies, and integrate with auth providers. The architecture supports "
+            f"security best practices from day one. Defense in depth is achievable."
+        )
+
+        # Exchange 4: Long-term viability
+        stool_4 = (
+            f"Maintenance burden: Consider testing strategy, code organization, technical "
+            f"debt accumulation, and team onboarding. {project_name} needs comprehensive "
+            f"tests, clear documentation, and consistent patterns. Otherwise it becomes "
+            f"unmaintainable in 6 months. Technical debt kills projects faster than bugs."
+        )
+
+        gomer_4 = (
+            f"Sustainable growth: The project structure supports testability and maintainability. "
+            f"Can add CI/CD pipelines, implement integration tests, use type hints/checking, "
+            f"and document API contracts. This approach lets {project_name} evolve with the "
+            f"team rather than becoming a liability. Good choices now prevent pain later."
+        )
+
+        # Combine into full debate messages
+        stool_msg = f"{stool_1}\n\n{stool_3}"
+        gomer_msg = f"{gomer_1}\n\n{gomer_3}"
 
         debate = {
             "stool": stool_msg,
@@ -755,15 +799,7 @@ Include: project purpose, tech stack, features, aesthetics, constraints. Be thor
         # Step 0: Welcome - straight to planning
         if step == 0:
             state["step"] = 1
-            time_period = "morning" if 5 <= datetime.now().hour < 12 else "afternoon" if 12 <= datetime.now().hour < 18 else "evening"
-            response = (
-                f"Good {time_period}, {self._get_salutation()} Worms. "
-                f"What are we building today?"
-            )
-            # Translate response to user's language if needed
-            if api_key:
-                response = self._translate_response(response, api_key)
-            return response, suggestions, prd_preview
+            return "", suggestions, prd_preview
 
         # Step 1: Got the idea - start building PRD immediately
         elif step == 1:
