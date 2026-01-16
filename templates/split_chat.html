@@ -371,38 +371,38 @@
             }
         }
 
-        /* Mobile PRD Collapse Toggle */
+        /* Mobile PRD Collapse Toggle - HIDDEN on desktop */
         .prd-collapse-toggle {
-            display: none;
-            padding: 14px 16px;
-            background: var(--bg-secondary);
-            border-bottom: 1px solid var(--border);
-            cursor: pointer;
-            transition: all 0.3s ease;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            position: sticky;
-            bottom: 0;
-            z-index: 10;
-        }
-
-        .prd-collapse-toggle .toggle-icon {
-            font-size: 28px;
-            color: var(--accent);
-            flex-shrink: 0;
-            line-height: 1;
-        }
-
-        .prd-collapse-toggle:hover {
-            background: var(--bg-tertiary);
+            display: none !important;
         }
 
         /* Mobile PRD Styles */
         @media (max-width: 768px) {
-            /* Show collapse toggle on mobile */
+            /* Show collapse toggle on mobile ONLY */
             .prd-collapse-toggle {
-                display: flex;
+                display: flex !important;
+                padding: 14px 16px;
+                background: var(--bg-secondary);
+                border-bottom: 1px solid var(--border);
+                cursor: pointer;
+                transition: all 0.3s ease;
+                align-items: center;
+                justify-content: center;
+                gap: 12px;
+                position: sticky;
+                bottom: 0;
+                z-index: 10;
+            }
+
+            .prd-collapse-toggle .toggle-icon {
+                font-size: 28px;
+                color: var(--accent);
+                flex-shrink: 0;
+                line-height: 1;
+            }
+
+            .prd-collapse-toggle:hover {
+                background: var(--bg-tertiary);
             }
 
             /* PRD section is collapsed by default on mobile */
@@ -443,18 +443,10 @@
                 gap: 8px;
             }
 
-            /* Fill the screen on iPhone */
-            body {
-                height: 100vh;
-                height: 100dvh; /* Dynamic viewport height for mobile */
-                overflow: hidden;
-            }
-
-            /* Chat gets full available space when PRD is collapsed */
+            /* Chat gets full available space on mobile */
             .chat-section {
                 flex: 1;
                 min-height: 0;
-                max-height: none;
             }
         }
 
