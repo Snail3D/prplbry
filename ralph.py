@@ -818,7 +818,7 @@ Include: project purpose, tech stack, features, aesthetics, constraints. Be thor
                 {"id": "GH-003", "ti": "Configure GitHub Actions", "d": "Set up CI/CD pipeline for automated testing", "f": ".github/workflows/", "pr": "medium"}
             ]
 
-            response = f"Got it. **{state['prd']['pn']}**.\n\nTech stack?"
+            response = f"Got it. **{state['prd']['pn']}**.\n\nDo you have a tech stack in mind or any requirements you want to nail upfront?"
 
             prd_preview = self._update_prd_display()
             return response, suggestions, prd_preview
@@ -840,7 +840,7 @@ Include: project purpose, tech stack, features, aesthetics, constraints. Be thor
                 state["prd"]["gh"] = False
 
             state["step"] = 3
-            response = f"Noted. Tech stack?"
+            response = f"Noted. Do you have a tech stack in mind or any requirements you want to nail upfront?"
 
             prd_preview = self._update_prd_display()
             return response, suggestions, prd_preview
