@@ -249,11 +249,11 @@ app.config['SECRET_KEY'] = SECRET_KEY
 app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024  # 10MB
 app.config['UPLOAD_FOLDER'] = str(UPLOAD_FOLDER)
 
-# Initialize rate limiter (X-911/X-1001)
+# Initialize rate limiter (X-911/X-1001) - Much higher limits for form usage
 limiter = Limiter(
     app=app,
     key_func=get_remote_address,
-    default_limits=["200 per day", "50 per hour"],
+    default_limits=["1000 per day", "100 per hour"],
     storage_uri="memory://"
 )
 
@@ -449,16 +449,14 @@ def ratelimit_handler(e):
 
 @app.route('/')
 def index():
-    """Landing page - Full send sauce."""
-    prd_count = get_prd_count()
-    berry_text = "berry" if prd_count == 1 else "berries"
-    return render_template('minimal.html', prd_count=prd_count, berry_text=berry_text)
+    """Landing page - Redirect to form wizard."""
+    return redirect(url_for('form_wizard'))
 
 
 @app.route('/create')
-def create_prd():
-    """PRD creation page."""
-    return render_template('create.html')
+def form_wizard():
+    """PRD form wizard page."""
+    return render_template('form_wizard.html')
 
 
 @app.route('/privacy')
@@ -2005,7 +2003,6 @@ def api_analyze_image():
 
 
 @app.route('/api/prd/generate', methods=['POST'])
-@limiter.limit("10 per minute")  # X-911/X-1001: Rate limiting
 @validate_request  # X-910/X-1000: Input validation
 def api_generate_prd():
     """
