@@ -227,6 +227,29 @@
             background: rgb(255, 59, 48);
         }
 
+        .priority-btn {
+            margin-top: 8px;
+            padding: 4px 12px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 11px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .priority-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .priority-btn.high {
+            background: rgba(255, 59, 48, 0.8);
+            border-color: rgba(255, 59, 48, 1);
+        }
+
         @keyframes orangeToPurple {
             0% {
                 background: var(--accent);
@@ -1013,6 +1036,14 @@
                 deleteBtn.innerHTML = '×';
                 deleteBtn.onclick = () => deleteMessage(msgDiv.dataset.messageId, msgDiv);
                 msgDiv.appendChild(deleteBtn);
+
+                // Add priority button
+                const priorityBtn = document.createElement('button');
+                priorityBtn.className = 'priority-btn';
+                priorityBtn.innerHTML = 'Medium Priority';
+                priorityBtn.dataset.priority = 'medium';
+                priorityBtn.onclick = () => togglePriority(msgDiv.dataset.messageId, priorityBtn);
+                msgDiv.appendChild(priorityBtn);
             }
 
             messagesDiv.appendChild(msgDiv);
@@ -1045,6 +1076,44 @@
                 }
             } catch (e) {
                 console.error('Delete failed:', e);
+            }
+        }
+
+        async function togglePriority(messageId, priorityBtn) {
+            const currentPriority = priorityBtn.dataset.priority;
+            const newPriority = currentPriority === 'medium' ? 'high' : 'medium';
+
+            try {
+                const response = await fetch('/api/chat/priority', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message_id: messageId,
+                        session_id: sessionId,
+                        priority: newPriority
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Update button state
+                    priorityBtn.dataset.priority = newPriority;
+                    if (newPriority === 'high') {
+                        priorityBtn.innerHTML = 'High Priority';
+                        priorityBtn.classList.add('high');
+                    } else {
+                        priorityBtn.innerHTML = 'Medium Priority';
+                        priorityBtn.classList.remove('high');
+                    }
+
+                    // Update PRD display
+                    if (data.prd_preview) {
+                        document.getElementById('prdEditor').value = data.prd_preview;
+                    }
+                }
+            } catch (e) {
+                console.error('Priority toggle failed:', e);
             }
         }
 

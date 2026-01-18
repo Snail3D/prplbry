@@ -743,6 +743,42 @@ def api_delete_message():
         return jsonify({"error": str(e)}), 500
 
 
+@app.route('/api/chat/priority', methods=['POST'])
+def api_update_priority():
+    """
+    Update the priority of a task in the PRD.
+    """
+    try:
+        data = request.get_json()
+        session_id = data.get('session_id', '')
+        message_id = data.get('message_id', '')
+        priority = data.get('priority', 'medium')
+
+        if not session_id or not message_id:
+            return jsonify({"error": "Missing session_id or message_id"}), 400
+
+        if priority not in ['medium', 'high']:
+            return jsonify({"error": "Priority must be 'medium' or 'high'"}), 400
+
+        # Get Ralph instance for this session
+        ralph_instance = ralph.get_chat_session(session_id)
+
+        # Update the priority
+        result = ralph_instance.update_message_priority(message_id, priority)
+
+        if result['success']:
+            return jsonify({
+                "success": True,
+                "prd_preview": result['prd_preview']
+            })
+        else:
+            return jsonify({"error": result.get('error', 'Priority update failed')}), 400
+
+    except Exception as e:
+        logger.exception("Priority update error")
+        return jsonify({"error": str(e)}), 500
+
+
 @app.route('/api/unlock', methods=['POST'])
 def api_unlock_session():
     """

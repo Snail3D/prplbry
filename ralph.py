@@ -1116,6 +1116,36 @@ Include: project purpose, tech stack, features, aesthetics, constraints. Be thor
             "prd_preview": self._update_prd_display()
         }
 
+    def update_message_priority(self, message_id: str, priority: str) -> dict:
+        """
+        Update the priority of a task associated with a message.
+        Returns dict with success status and updated PRD preview.
+        """
+        state = self.conversation_state
+
+        # Find the message
+        messages = state.get("messages", [])
+        message_to_update = None
+
+        for msg in messages:
+            if msg.get("message_id") == message_id:
+                message_to_update = msg
+                break
+
+        if not message_to_update:
+            return {"success": False, "error": "Message not found"}
+
+        # Store priority on the message
+        message_to_update["priority"] = priority
+
+        # Rebuild PRD with updated priorities
+        self._rebuild_prd_from_messages()
+
+        return {
+            "success": True,
+            "prd_preview": self._update_prd_display()
+        }
+
     def _rebuild_prd_from_messages(self) -> None:
         """
         Rebuild the PRD from scratch based on remaining messages.
@@ -1137,13 +1167,14 @@ Include: project purpose, tech stack, features, aesthetics, constraints. Be thor
         for msg in messages:
             if msg.get("role") == "user":
                 content = msg.get("content", "")
+                priority = msg.get("priority", "medium")
                 # Process the message again to rebuild PRD
-                self._add_to_prd(content, skip_response=True)
+                self._add_to_prd(content, skip_response=True, priority=priority)
 
-    def _add_to_prd(self, message: str, skip_response: bool = False) -> None:
+    def _add_to_prd(self, message: str, skip_response: bool = False, priority: str = "medium") -> None:
         """
         Add message content to PRD based on current step.
-        Used for rebuilding PRD after deletions.
+        Used for rebuilding PRD after deletions and priority updates.
         """
         state = self.conversation_state
         step = state.get("step", 0)
@@ -1184,13 +1215,13 @@ Include: project purpose, tech stack, features, aesthetics, constraints. Be thor
         elif step == 4:
             # Features
             state["features"].append(message)
-            # Add feature to PRD
+            # Add feature to PRD with specified priority
             prd["p"]["03_core"]["t"].append({
                 "id": f"FEA-{len(state['features']):03d}",
                 "ti": message[:50],
                 "d": message,
                 "f": "features/",
-                "pr": "medium"
+                "pr": priority
             })
 
         elif step == 5:
