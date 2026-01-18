@@ -712,6 +712,38 @@ def api_reset_chat():
         return jsonify({"error": str(e)}), 500
 
 
+@app.route('/api/chat/delete', methods=['POST'])
+def api_delete_message():
+    """
+    Delete a message and its corresponding PRD section.
+    """
+    try:
+        data = request.get_json()
+        session_id = data.get('session_id', '')
+        message_id = data.get('message_id', '')
+
+        if not session_id or not message_id:
+            return jsonify({"error": "Missing session_id or message_id"}), 400
+
+        # Get Ralph instance for this session
+        ralph_instance = ralph.get_or_create_session(session_id)
+
+        # Delete the message and update PRD
+        result = ralph_instance.delete_message_and_update_prd(message_id)
+
+        if result['success']:
+            return jsonify({
+                "success": True,
+                "prd_preview": result['prd_preview']
+            })
+        else:
+            return jsonify({"error": result.get('error', 'Delete failed')}), 400
+
+    except Exception as e:
+        logger.exception("Delete error")
+        return jsonify({"error": str(e)}), 500
+
+
 @app.route('/api/unlock', methods=['POST'])
 def api_unlock_session():
     """

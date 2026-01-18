@@ -195,6 +195,36 @@
             color: #fff;
             box-shadow: 0 1px 2px rgba(0,0,0,0.1);
             animation: orangeToPurple 5s ease-out forwards;
+            position: relative;
+            padding-right: 35px;
+        }
+
+        .message.assistant:hover .delete-btn {
+            opacity: 1;
+        }
+
+        .delete-btn {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            width: 20px;
+            height: 20px;
+            background: rgba(255, 59, 48, 0.9);
+            border: none;
+            border-radius: 50%;
+            color: #fff;
+            font-size: 12px;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
+
+        .delete-btn:hover {
+            background: rgb(255, 59, 48);
         }
 
         @keyframes orangeToPurple {
@@ -874,91 +904,7 @@
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
-            // Start language cycling animation on send button
-            startLanguageCycling();
-        });
-
-        // Language cycling for send button
-        const sendButtonTexts = [
-            { text: "Send", lang: "English" },
-            { text: "Enviar", lang: "Spanish" },
-            { text: "Envoyer", lang: "French" },
-            { text: "Invia", lang: "Italian" },
-            { text: "Enviar", lang: "Portuguese" },
-            { text: "发送", lang: "Chinese" },
-            { text: "送信", lang: "Japanese" },
-            { text: "보내기", lang: "Korean" },
-            { text: "Отправить", lang: "Russian" },
-            { text: "Senden", lang: "German" },
-            { text: "Versturen", lang: "Dutch" },
-            { text: "Wyślij", lang: "Polish" },
-            { text: "Gönder", lang: "Turkish" },
-            { text: "שלח", lang: "Hebrew" },
-            { text: "إرسال", lang: "Arabic" },
-            { text: "भेजें", lang: "Hindi" },
-            { text: "Kirim", lang: "Indonesian" },
-            { text: "Gửi", lang: "Vietnamese" },
-            { text: "ส่ง", lang: "Thai" }
-        ];
-
-        let currentLangIndex = 0;
-        let isCycling = true;
-
-        function startLanguageCycling() {
-            const sendBtn = document.getElementById('sendBtn');
-
-            // Cycle every 2.5 seconds
-            setInterval(() => {
-                if (!isCycling) return;
-
-                // Fade out
-                sendBtn.classList.add('fade-out');
-
-                setTimeout(() => {
-                    // Change text
-                    currentLangIndex = (currentLangIndex + 1) % sendButtonTexts.length;
-                    sendBtn.textContent = sendButtonTexts[currentLangIndex].text;
-                    sendBtn.title = sendButtonTexts[currentLangIndex].lang;
-
-                    // Fade in
-                    sendBtn.classList.remove('fade-out');
-                    sendBtn.classList.add('fade-in');
-                }, 500); // Wait for fade out to complete
-
-            }, 2500); // Change every 2.5 seconds
-        }
-
-        // Stop cycling when user focuses on input
-        const chatInput = document.getElementById('chatInput');
-        chatInput.addEventListener('focus', () => {
-            isCycling = false;
-            // Reset to English
-            const sendBtn = document.getElementById('sendBtn');
-            sendBtn.classList.add('fade-out');
-            setTimeout(() => {
-                sendBtn.textContent = 'Send';
-                sendBtn.title = 'English';
-                sendBtn.classList.remove('fade-out');
-                sendBtn.classList.add('fade-in');
-            }, 500);
-        });
-
-        chatInput.addEventListener('blur', () => {
-            isCycling = true;
-        });
-
-        // Purple send button when typing
-        chatInput.addEventListener('input', () => {
-            const sendBtn = document.getElementById('sendBtn');
-            if (chatInput.value.trim().length > 0) {
-                sendBtn.classList.add('typing');
-                isCycling = false;
-                sendBtn.textContent = 'Send';
-                sendBtn.title = 'English';
-            } else {
-                sendBtn.classList.remove('typing');
-                isCycling = true;
-            }
+            // Nothing to initialize
         });
 
         function generateUUID() {
@@ -971,6 +917,17 @@
         function toggleMode() {
             document.body.classList.toggle('light-mode');
         }
+
+        // Purple send button when typing
+        const chatInput = document.getElementById('chatInput');
+        chatInput.addEventListener('input', () => {
+            const sendBtn = document.getElementById('sendBtn');
+            if (chatInput.value.trim().length > 0) {
+                sendBtn.classList.add('typing');
+            } else {
+                sendBtn.classList.remove('typing');
+            }
+        });
 
         function handleKeyPress(e) {
             if (e.key === 'Enter' && !e.shiftKey) {
@@ -1039,13 +996,56 @@
             document.getElementById('sendBtn').disabled = false;
         }
 
-        function addMessage(role, content) {
+        function addMessage(role, content, messageId = null) {
             const messagesDiv = document.getElementById('messages');
             const msgDiv = document.createElement('div');
             msgDiv.className = `message ${role}`;
-            msgDiv.innerHTML = content.replace(/\n/g, '<br>');
+            msgDiv.dataset.messageId = messageId || Date.now().toString();
+
+            const contentDiv = document.createElement('div');
+            contentDiv.innerHTML = content.replace(/\n/g, '<br>');
+            msgDiv.appendChild(contentDiv);
+
+            // Add delete button to assistant messages
+            if (role === 'assistant') {
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'delete-btn';
+                deleteBtn.innerHTML = '×';
+                deleteBtn.onclick = () => deleteMessage(msgDiv.dataset.messageId, msgDiv);
+                msgDiv.appendChild(deleteBtn);
+            }
+
             messagesDiv.appendChild(msgDiv);
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        async function deleteMessage(messageId, msgDiv) {
+            if (!confirm('Remove this from PRD?')) return;
+
+            try {
+                const response = await fetch('/api/chat/delete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message_id: messageId,
+                        session_id: sessionId
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Remove message from chat
+                    msgDiv.remove();
+
+                    // Update PRD display
+                    if (data.prd_preview) {
+                        document.getElementById('prdEditor').value = data.prd_preview;
+                    }
+                }
+            } catch (e) {
+                console.error('Delete failed:', e);
+            }
         }
 
         function addSuggestion(suggestion) {

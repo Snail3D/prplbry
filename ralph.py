@@ -787,9 +787,16 @@ Include: project purpose, tech stack, features, aesthetics, constraints. Be thor
         if suggestion_id and vote:
             return self._handle_suggestion_vote(suggestion_id, vote)
 
-        # Track the user's message
+        # Track the user's message with ID and step
         if message:
-            state["messages"].append({"role": "user", "content": message})
+            import uuid
+            message_id = str(uuid.uuid4())
+            state["messages"].append({
+                "role": "user",
+                "content": message,
+                "message_id": message_id,
+                "step": step
+            })
 
         response = ""
         suggestions = []
@@ -847,7 +854,7 @@ Include: project purpose, tech stack, features, aesthetics, constraints. Be thor
             prd_preview = self._update_prd_display()
             return response, suggestions, prd_preview
 
-        # Step 3: Got tech stack - update PRD and trigger backroom
+        # Step 3: Got tech stack - update PRD
         elif step == 3:
             state["tech_stack"] = message
 
@@ -874,27 +881,11 @@ Include: project purpose, tech stack, features, aesthetics, constraints. Be thor
 
             state["step"] = 4
 
-            # Trigger backroom debate NOW (after some back-and-forth)
-            stool_msg, gomer_msg = self._start_backroom_debate()
-
-            # Add backroom as suggestions that can be voted on
-            stool_id = f"suggest_{int(datetime.now().timestamp() * 1000)}_0"
-            gomer_id = f"suggest_{int(datetime.now().timestamp() * 1000)}_1"
-
-            state["suggestions"] = [
-                {
-                    "id": stool_id,
-                    "text": stool_msg,
-                    "type": "backroom_stool",
-                    "speaker": "Stool (Skeptic)"
-                },
-                {
-                    "id": gomer_id,
-                    "text": gomer_msg,
-                    "type": "backroom_gomer",
-                    "speaker": "Gomer (Optimist)"
-                }
-            ]
+            response = f"Got it. {state['prd']['ts']['fw']} it is.\n\nWhat's the main problem you're solving? Who's this for?"
+            suggestions = []
+            backroom = None
+            prd_preview = self._update_prd_display()
+            return response, suggestions, prd_preview
 
             response = f"Got it. {message}.\n\nWait... I hear the back room talking about this. Let's listen in.\n\n(👍👎 Vote on their perspectives below)"
 
@@ -1150,6 +1141,129 @@ Include: project purpose, tech stack, features, aesthetics, constraints. Be thor
     def get_prd(self) -> Optional[dict]:
         """Get the generated PRD"""
         return self.conversation_state.get("prd")
+
+    def delete_message_and_update_prd(self, message_id: str) -> dict:
+        """
+        Delete a message and revert its PRD changes.
+        Returns dict with success status and updated PRD preview.
+        """
+        state = self.conversation_state
+
+        # Find and remove the message
+        messages = state.get("messages", [])
+        message_to_delete = None
+        message_index = -1
+
+        for i, msg in enumerate(messages):
+            if msg.get("message_id") == message_id:
+                message_to_delete = msg
+                message_index = i
+                break
+
+        if not message_to_delete:
+            return {"success": False, "error": "Message not found"}
+
+        # Get the step at which this message was processed
+        msg_step = message_to_delete.get("step", state.get("step", 0))
+
+        # Remove the message and all messages after it
+        state["messages"] = messages[:message_index]
+
+        # Revert PRD to state before this message
+        # Rebuild PRD from remaining messages
+        self._rebuild_prd_from_messages()
+
+        return {
+            "success": True,
+            "prd_preview": self._update_prd_display()
+        }
+
+    def _rebuild_prd_from_messages(self) -> None:
+        """
+        Rebuild the PRD from scratch based on remaining messages.
+        This ensures PRD stays consistent after deletions.
+        """
+        state = self.conversation_state
+        messages = state.get("messages", [])
+
+        # Reset PRD to initial state
+        state["prd"] = self._initialize_prd()
+        state["step"] = 0
+        state["purpose"] = None
+        state["tech_stack"] = None
+        state["features"] = []
+        state["aesthetics"] = None
+        state["constraints"] = []
+
+        # Re-process each remaining message
+        for msg in messages:
+            if msg.get("role") == "user":
+                content = msg.get("content", "")
+                # Process the message again to rebuild PRD
+                self._add_to_prd(content, skip_response=True)
+
+    def _add_to_prd(self, message: str, skip_response: bool = False) -> None:
+        """
+        Add message content to PRD based on current step.
+        Used for rebuilding PRD after deletions.
+        """
+        state = self.conversation_state
+        step = state.get("step", 0)
+        prd = state["prd"]
+        message_lower = message.lower()
+
+        if step == 0:
+            # First message - set project info
+            state["purpose"] = message
+            state["step"] = 3
+            prd["pn"] = self._infer_project_name()
+            prd["pd"] = message[:200]
+            prd["sp"] = message
+            state["github"] = True
+            prd["gh"] = True
+
+            # Add GitHub setup tasks
+            prd["p"]["01_setup"]["t"] = [
+                {"id": "GH-001", "ti": "Initialize Git repository", "d": "Create git repo and initial commit", "f": "terminal", "pr": "high"},
+                {"id": "GH-002", "ti": "Create GitHub repository", "d": "Set up GitHub repo with README and .gitignore", "f": "github.com", "pr": "high"},
+                {"id": "GH-003", "ti": "Configure GitHub Actions", "d": "Set up CI/CD pipeline for automated testing", "f": ".github/workflows/", "pr": "medium"}
+            ]
+
+        elif step == 3:
+            # Tech stack
+            state["tech_stack"] = message
+            state["step"] = 4
+
+            ts_map = {
+                "python": {"lang": "Py", "fw": "Flask", "db": "PostgreSQL", "oth": []},
+                "flask": {"lang": "Py", "fw": "Flask", "db": "PostgreSQL", "oth": []},
+                "node": {"lang": "JS", "fw": "Express", "db": "MongoDB", "oth": []},
+                "react": {"lang": "JS", "fw": "React", "db": "None", "oth": ["Node.js"]},
+            }
+            tech_input = message.lower()
+            prd["ts"] = ts_map.get(tech_input, ts_map.get("python"))
+
+        elif step == 4:
+            # Features
+            state["features"].append(message)
+            # Add feature to PRD
+            prd["p"]["03_core"]["t"].append({
+                "id": f"FEA-{len(state['features']):03d}",
+                "ti": message[:50],
+                "d": message,
+                "f": "features/",
+                "pr": "medium"
+            })
+
+        elif step == 5:
+            # Aesthetics
+            state["aesthetics"] = message
+            state["step"] = 6
+            prd["aes"] = message
+
+        elif step == 6:
+            # Constraints
+            state["constraints"].append(message)
 
     def get_conversation_summary(self) -> str:
         """Get a summary of the conversation"""
