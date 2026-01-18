@@ -788,17 +788,6 @@
     </style>
 </head>
 <body>
-    <!-- API Key Modal -->
-    <div class="modal-overlay" id="apiKeyModal">
-        <div class="modal">
-            <h3>🔑 Groq API Key</h3>
-            <p>Enter your free Groq API key to continue. Get it at console.groq.com</p>
-            <input type="password" class="api-input" id="apiKeyInput" placeholder="gsk_...">
-            <button class="modal-btn" onclick="saveApiKey()">Start</button>
-            <span class="privacy-link" onclick="showPrivacy()">Privacy (we collect nothing)</span>
-        </div>
-    </div>
-
     <!-- Privacy Modal -->
     <div class="modal-overlay" id="privacyModal">
         <div class="modal">
@@ -881,19 +870,11 @@
 
     <script>
         let sessionId = '{{ session_id }}' || generateUUID();
-        let groqApiKey = sessionStorage.getItem('groqApiKey') || '';
         let donationRefusals = 0;
         const MAX_DONATION_REQUESTS = 2;
-        const GROQ_MODEL = 'llama-3.3-70b-versatile';
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
-            if (!groqApiKey) {
-                document.getElementById('apiKeyModal').classList.add('active');
-            } else {
-                loadChatHistory();
-            }
-
             // Start language cycling animation on send button
             startLanguageCycling();
         });
@@ -988,18 +969,6 @@
             });
         }
 
-        function saveApiKey() {
-            const key = document.getElementById('apiKeyInput').value.trim();
-            if (key && key.startsWith('gsk_')) {
-                groqApiKey = key;
-                sessionStorage.setItem('groqApiKey', key);
-                document.getElementById('apiKeyModal').classList.remove('active');
-                loadChatHistory();
-            } else {
-                alert('Please enter a valid Groq API key (starts with gsk_)');
-            }
-        }
-
         function toggleMode() {
             document.body.classList.toggle('light-mode');
         }
@@ -1029,8 +998,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         message: message,
-                        session_id: sessionId,
-                        grok_api_key: groqApiKey
+                        session_id: sessionId
                     })
                 });
 
@@ -1121,8 +1089,7 @@
                     body: JSON.stringify({
                         suggestion_id: suggestionId,
                         vote: vote,
-                        session_id: sessionId,
-                        grok_api_key: groqApiKey
+                        session_id: sessionId
                     })
                 });
             } catch (e) {
