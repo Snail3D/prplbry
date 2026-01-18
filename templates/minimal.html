@@ -80,30 +80,6 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.15);
         }
 
-        .nav-links {
-            position: fixed;
-            top: 30px;
-            left: 30px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            opacity: 0;
-            animation: fadeIn 0.8s ease-out 0.4s forwards;
-        }
-
-        .nav-link {
-            color: rgba(255,255,255,0.6);
-            text-decoration: none;
-            font-size: 11px;
-            font-weight: 400;
-            transition: all 0.3s ease;
-            letter-spacing: -0.2px;
-        }
-
-        .nav-link:hover {
-            color: rgba(255,255,255,0.9);
-        }
-
         .footer {
             position: fixed;
             bottom: 30px;
@@ -111,29 +87,40 @@
             transform: translateX(-50%);
             opacity: 0;
             animation: fadeIn 1s ease-out 0.6s forwards;
-        }
-
-        .love-link {
-            font-size: 16px;
-            color: rgba(255,255,255,0.8);
-            text-decoration: none;
-            font-weight: 500;
-            letter-spacing: -0.2px;
-            transition: all 0.3s ease;
-        }
-
-        .love-link:hover {
-            color: rgba(255,255,255,1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
         }
 
         .berry-count {
-            font-size: 13px;
-            color: rgba(255,255,255,0.7);
+            font-size: 14px;
+            color: rgba(255,255,255,0.8);
             font-weight: 400;
             letter-spacing: -0.2px;
-            margin-top: 20px;
-            opacity: 0;
-            animation: fadeIn 1s ease-out 0.4s forwards;
+        }
+
+        .berry-count span {
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .footer-link {
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .footer-link:hover {
+            color: rgba(255,255,255,1);
         }
 
         @keyframes fadeInUp {
@@ -171,10 +158,6 @@
     </style>
 </head>
 <body>
-    <div class="nav-links">
-        <a href="https://buymeacoffee.com/snail3d" class="nav-link" target="_blank">Show ❤</a>
-        <a href="/privacy" class="nav-link">privacy</a>
-    </div>
     <div class="container">
         <div class="hero">
             <span class="logo">🫐</span>
@@ -185,6 +168,10 @@
             <p class="berry-count"><span>{{ prd_count }}</span> berries smashed</p>
         </div>
         <div class="footer">
+            <div class="footer-links">
+                <a href="https://buymeacoffee.com/snail3d" class="footer-link" target="_blank">Show ❤</a>
+                <a href="/privacy" class="footer-link">privacy</a>
+            </div>
         </div>
     </div>
 </body>
