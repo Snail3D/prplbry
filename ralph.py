@@ -842,9 +842,16 @@ Include: project purpose, tech stack, features, aesthetics, constraints. Be thor
             features = [f.strip() for f in message.replace('\n', ',').split(',') if f.strip()]
 
             for i, feature in enumerate(features[:5]):
+                # Create short title from first ~40 chars
+                short_title = feature[:40] + "..." if len(feature) > 40 else feature
+                # Extract first sentence as title if possible
+                first_period = feature.find('.')
+                if first_period > 10 and first_period < 50:
+                    short_title = feature[:first_period + 1]
+
                 state["prd"]["p"]["02_core"]["t"].append({
                     "id": f"CORE-{100 + i}",
-                    "ti": feature,
+                    "ti": short_title,
                     "d": feature,
                     "f": "core.py",
                     "pr": "high"
@@ -1215,9 +1222,10 @@ Include: project purpose, tech stack, features, aesthetics, constraints. Be thor
             # Features
             state["features"].append(message)
             # Add feature to PRD with specified priority
+            short_title = message[:50] + "..." if len(message) > 50 else message
             prd["p"]["03_core"]["t"].append({
                 "id": f"FEA-{len(state['features']):03d}",
-                "ti": message[:50],
+                "ti": short_title,
                 "d": message,
                 "f": "features/",
                 "pr": priority
