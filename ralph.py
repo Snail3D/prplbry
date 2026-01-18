@@ -1155,13 +1155,13 @@ Include: project purpose, tech stack, features, aesthetics, constraints. Be thor
     def _rebuild_prd_from_messages(self) -> None:
         """
         Rebuild the PRD from scratch based on remaining messages.
-        This ensures PRD stays consistent after deletions.
+        This ensures PRD stays consistent after deletions and priority updates.
         """
         state = self.conversation_state
         messages = state.get("messages", [])
 
         # Reset PRD to initial state
-        state["prd"] = self._initialize_prd()
+        state["prd"] = self._empty_prd()
         state["step"] = 0
         state["purpose"] = None
         state["tech_stack"] = None
