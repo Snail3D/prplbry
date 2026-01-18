@@ -909,6 +909,12 @@ Include: project purpose, tech stack, features, aesthetics, constraints. Be thor
             feature_keywords = ["feature", "add", "include", "want", "need", "should", "also", "and", "multiplayer", "design", "interface"]
             if any(kw in message_lower for kw in feature_keywords) and len(message) > 20:
                 # Still adding features - don't move forward yet
+                # Ensure the core category exists
+                if "02_core" not in state["prd"]["p"]:
+                    state["prd"]["p"]["02_core"] = {"n": "Core", "t": []}
+                if "t" not in state["prd"]["p"]["02_core"]:
+                    state["prd"]["p"]["02_core"]["t"] = []
+
                 new_task_id = len(state["prd"]["p"]["02_core"]["t"]) + 100
                 state["prd"]["p"]["02_core"]["t"].append({
                     "id": f"CORE-{new_task_id}",
@@ -1223,6 +1229,13 @@ Include: project purpose, tech stack, features, aesthetics, constraints. Be thor
             state["features"].append(message)
             # Add feature to PRD with specified priority
             short_title = message[:50] + "..." if len(message) > 50 else message
+
+            # Ensure the core category exists
+            if "03_core" not in prd["p"]:
+                prd["p"]["03_core"] = {"n": "Core", "t": []}
+            if "t" not in prd["p"]["03_core"]:
+                prd["p"]["03_core"]["t"] = []
+
             prd["p"]["03_core"]["t"].append({
                 "id": f"FEA-{len(state['features']):03d}",
                 "ti": short_title,
@@ -1490,21 +1503,43 @@ Include: project purpose, tech stack, features, aesthetics, constraints. Be thor
 
             # Restore PRD to conversation state
             state = self.conversation_state
+
+            # Ensure PRD has complete structure
+            if "p" not in expanded_prd:
+                expanded_prd["p"] = {}
+            for cat_id in ["00_security", "01_setup", "02_core", "03_api", "04_test"]:
+                if cat_id not in expanded_prd["p"]:
+                    expanded_prd["p"][cat_id] = {"n": cat_id.replace("_", " ").title(), "t": []}
+                if "t" not in expanded_prd["p"][cat_id]:
+                    expanded_prd["p"][cat_id]["t"] = []
+
+            # Set basic info
             state["prd"] = expanded_prd
-            state["step"] = 4  # Set to a point where PRD has content
+            state["prd"]["pn"] = expanded_prd.get("pn", "Restored Project")
+            state["prd"]["pd"] = expanded_prd.get("pd", "")
+            state["prd"]["sp"] = expanded_prd.get("sp", expanded_prd.get("pd", ""))
 
-            # Extract basic info from PRD
-            if expanded_prd.get("pn"):
-                state["prd"]["pn"] = expanded_prd["pn"]
-                state["purpose"] = expanded_prd.get("pd", "")[:200]
+            # Set up state variables for proper operation
+            state["purpose"] = expanded_prd.get("pd", "")[:200]
+            state["step"] = 6  # Move to constraints step so user can add more features
 
-            if expanded_prd.get("pd"):
-                state["prd"]["pd"] = expanded_prd["pd"]
-                state["prd"]["sp"] = expanded_prd.get("sp", expanded_prd["pd"])
-
+            # Restore tech stack
             if expanded_prd.get("ts"):
                 state["prd"]["ts"] = expanded_prd["ts"]
-                state["tech_stack"] = f"{expanded_prd['ts'].get('lang', '')} {expanded_prd['ts'].get('fw', '')}"
+                ts = expanded_prd["ts"]
+                state["tech_stack"] = f"{ts.get('lang', '')} {ts.get('fw', '')}"
+
+            # Extract features from PRD tasks
+            state["features"] = []
+            for category in expanded_prd.get("p", {}).values():
+                for task in category.get("t", []):
+                    task_desc = task.get("d", task.get("ti", ""))
+                    if task_desc:
+                        state["features"].append(task_desc)
+
+            # Set aesthetics if present
+            state["aesthetics"] = expanded_prd.get("aes", "")
+            state["constraints"] = expanded_prd.get("con", [])
 
             # Count total tasks
             total_tasks = sum(len(cat.get("t", [])) for cat in expanded_prd.get("p", {}).values())
