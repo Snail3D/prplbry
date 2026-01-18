@@ -18,7 +18,7 @@ from datetime import datetime
 from typing import Dict, List, Optional, Tuple
 
 from prd_engine import get_prd_engine
-from config import OLLAMA_URL, GROK_API_KEY
+from config import OLLAMA_URL
 
 logger = logging.getLogger(__name__)
 
@@ -372,85 +372,6 @@ class RalphChat:
             "language": "en"  # User's language (default English)
         }
 
-    def _translate_response(self, text: str, api_key: str) -> str:
-        """
-        Translate Ralph's response to the user's language using Groq.
-        Keeps Ralph's personality and humor intact.
-        Returns translated text or original if translation fails.
-        """
-        target_lang = self.conversation_state.get("language", "en")
-
-        # Skip translation if English
-        if target_lang == "en":
-            return text
-
-        # Language code mapping (ISO 639-1 to full name)
-        lang_names = {
-            "es": "Spanish",
-            "fr": "French",
-            "de": "German",
-            "it": "Italian",
-            "pt": "Portuguese",
-            "ru": "Russian",
-            "ja": "Japanese",
-            "ko": "Korean",
-            "zh": "Chinese",
-            "ar": "Arabic",
-            "hi": "Hindi",
-            "nl": "Dutch",
-            "pl": "Polish",
-            "tr": "Turkish",
-            "vi": "Vietnamese",
-            "th": "Thai",
-            "id": "Indonesian",
-            "sv": "Swedish",
-            "no": "Norwegian",
-            "da": "Danish",
-            "fi": "Finnish"
-        }
-
-        target_lang_name = lang_names.get(target_lang, "the user's language")
-
-        try:
-            prompt = f"""Translate this response to {target_lang_name}. Keep the personality, humor, and tone natural. Ralph is a friendly, slightly confused office boss who uses idioms and computer references. Keep all *actions* like *scratches head* or *adjusts tie* untranslated.
-
-Response to translate:
-{text}
-
-Translate ONLY the response text, nothing else."""
-
-            headers = {
-                "Authorization": f"Bearer {api_key}",
-                "Content-Type": "application/json"
-            }
-
-            data = {
-                "model": "llama-3.3-70b-versatile",
-                "messages": [{"role": "user", "content": prompt}],
-                "temperature": 0.7,
-                "max_tokens": 500
-            }
-
-            response = requests.post(
-                "https://api.groq.com/openai/v1/chat/completions",
-                headers=headers,
-                json=data,
-                timeout=10
-            )
-
-            if response.status_code == 200:
-                result = response.json()
-                translated = result["choices"][0]["message"]["content"].strip()
-                logger.info(f"Translated response to {target_lang}")
-                return translated
-            else:
-                logger.warning(f"Translation failed: {response.status_code}")
-                return text
-
-        except Exception as e:
-            logger.warning(f"Translation error: {e}")
-            return text
-
     def _extract_services_from_conversation(self) -> List[Dict]:
         """
         Extract service names mentioned in conversation that need API keys.
@@ -756,8 +677,7 @@ Include: project purpose, tech stack, features, aesthetics, constraints. Be thor
     def process_message(self, message: str, action: Optional[str] = None,
                        suggestion_id: Optional[str] = None,
                        vote: Optional[str] = None,
-                       gender_toggle: Optional[str] = None,
-                       api_key: Optional[str] = None) -> Tuple[str, List[Dict], Optional[str]]:
+                       gender_toggle: Optional[str] = None) -> Tuple[str, List[Dict], Optional[str]]:
         """
         Process a user message or action and return Ralph's response.
 
@@ -767,7 +687,6 @@ Include: project purpose, tech stack, features, aesthetics, constraints. Be thor
             suggestion_id: ID of suggestion being voted on
             vote: "up" or "down"
             gender_toggle: "male" or "female"
-            api_key: Groq API key for translation
 
         Returns:
             Tuple of (response_text, suggestions, prd_preview, backroom_debate)
@@ -1090,9 +1009,6 @@ Include: project purpose, tech stack, features, aesthetics, constraints. Be thor
             f"{self._get_ralph_idiom()}! Your PRD is being updated. "
             f"{self._get_computer_ref()}"
         )
-        # Translate response to user's language if needed
-        if api_key:
-            response = self._translate_response(response, api_key)
         prd_preview = self._update_prd_display()
         return response, suggestions, prd_preview
 

@@ -253,7 +253,7 @@ app.config['UPLOAD_FOLDER'] = str(UPLOAD_FOLDER)
 limiter = Limiter(
     app=app,
     key_func=get_remote_address,
-    default_limits=["200 per day", "50 per hour"],
+    default_limits=["1000 per day", "100 per hour"],
     storage_uri="memory://"
 )
 
@@ -641,8 +641,7 @@ def api_chat():
             action=action,
             suggestion_id=suggestion_id,
             vote=vote,
-            gender_toggle=gender_toggle,
-            api_key=grok_api_key  # Pass API key for translation
+            gender_toggle=gender_toggle
         )
 
         # Handle both old return format and new Ralph format
@@ -681,7 +680,7 @@ def api_chat():
         return jsonify({
             "success": False,
             "error": str(e),
-            "message": "*scratches head*\n\nWell slap my thigh! Something went wrong. Please try again."
+            "message": "Something went wrong. Please try again."
         }), 500
 
 
