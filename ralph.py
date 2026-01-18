@@ -1529,11 +1529,13 @@ Include: project purpose, tech stack, features, aesthetics, constraints. Be thor
                 ts = expanded_prd["ts"]
                 state["tech_stack"] = f"{ts.get('lang', '')} {ts.get('fw', '')}"
 
-            # Extract features from PRD tasks
+            # Extract features from PRD tasks (check both expanded and compressed keys)
             state["features"] = []
-            for category in expanded_prd.get("p", {}).values():
-                for task in category.get("t", []):
-                    task_desc = task.get("d", task.get("ti", ""))
+            prd_categories = expanded_prd.get("prds", expanded_prd.get("p", {}))
+            for category in prd_categories.values():
+                tasks = category.get("tasks", category.get("t", []))
+                for task in tasks:
+                    task_desc = task.get("description", task.get("d", task.get("title", task.get("ti", ""))))
                     if task_desc:
                         state["features"].append(task_desc)
 
@@ -1541,8 +1543,12 @@ Include: project purpose, tech stack, features, aesthetics, constraints. Be thor
             state["aesthetics"] = expanded_prd.get("aes", "")
             state["constraints"] = expanded_prd.get("con", [])
 
-            # Count total tasks
-            total_tasks = sum(len(cat.get("t", [])) for cat in expanded_prd.get("p", {}).values())
+            # Count total tasks (check both expanded and compressed keys)
+            prd_categories = expanded_prd.get("prds", expanded_prd.get("p", {}))
+            total_tasks = 0
+            for category in prd_categories.values():
+                tasks = category.get("tasks", category.get("t", []))
+                total_tasks += len(tasks)
 
             return True, f"Restored PRD: **{expanded_prd.get('pn', 'Project')}** with {total_tasks} tasks. Ready to continue building!"
 
