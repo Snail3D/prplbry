@@ -803,9 +803,9 @@ Include: project purpose, tech stack, features, aesthetics, constraints. Be thor
                     tech_matched = True
                     break
 
-            # Default if no match
-            if not tech_matched:
-                state["prd"]["ts"] = {"lang": "C++", "fw": "Custom", "db": "None", "oth": []}
+            # Default if no match or user says they don't know
+            if not tech_matched or "don't know" in tech_input or "not sure" in tech_input or "whatever" in tech_input or "help me" in tech_input:
+                state["prd"]["ts"] = {"lang": "TBD", "fw": "TBD", "db": "TBD", "oth": []}
 
             # Add file structure based on tech
             if "flask" in tech_input or "python" in tech_input:
@@ -821,18 +821,17 @@ Include: project purpose, tech stack, features, aesthetics, constraints. Be thor
 
             state["step"] = 4
 
-            fw = state['prd']['ts']['fw']
-            response = f"Got it. {fw} it is.\n\nWhat's the main problem you're solving? Who's this for?"
+            # Get framework name safely
+            fw = state['prd']['ts'].get('fw', 'Custom')
+            if fw == 'TBD':
+                response = f"Noted. We can figure out the exact tech stack later.\n\nWhat's the main problem you're solving? Who's this for?"
+            else:
+                response = f"Got it. {fw} it is.\n\nWhat's the main problem you're solving? Who's this for?"
+
             suggestions = []
             backroom = None
             prd_preview = self._update_prd_display()
             return response, suggestions, prd_preview
-
-            response = f"Got it. {message}.\n\nWait... I hear the back room talking about this. Let's listen in.\n\n(👍👎 Vote on their perspectives below)"
-
-            backroom = {"stool": stool_msg, "gomer": gomer_msg}
-            prd_preview = self._update_prd_display()
-            return response, state["suggestions"], prd_preview, backroom
 
         # Step 4: Got core features
         elif step == 4:
