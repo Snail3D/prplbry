@@ -41,6 +41,10 @@ PERMANENT_SESSION_LIFETIME = 3600  # 1 hour
 OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434")
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.2")
 
+# Grok API (Fallback)
+GROK_API_KEY = os.getenv("GROK_API_KEY", "")
+GROK_API_URL = os.getenv("GROK_API_URL", "https://api.x.ai/v1")
+
 # ============================================================================
 # OCR CONFIGURATION
 # ============================================================================

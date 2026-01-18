@@ -2,6 +2,7 @@
 PRD Generation Engine
 SEC-003: Initialize LLaMA model
 CORE-001: Implement LLaMA model processing
+CORE-002: Integrate Grok API
 X-931/X-1005: Implement caching
 """
 import json
@@ -20,7 +21,7 @@ except ImportError:
 import requests
 
 from config import (
-    OLLAMA_URL, OLLAMA_MODEL,
+    OLLAMA_URL, OLLAMA_MODEL, GROK_API_KEY, GROK_API_URL,
     PRD_GENERATION_PROMPT, CACHE_DEFAULT_TIMEOUT
 )
 from exceptions import PRDGenerationError, ModelUnavailableError
@@ -66,10 +67,11 @@ class PRDCache:
 
 class PRDEngine:
     """
-    PRD Generation Engine using LLaMA (via Ollama).
+    PRD Generation Engine using LLaMA (via Ollama) with Grok fallback.
 
     Supports:
     - Local LLaMA models via Ollama
+    - Grok API as fallback
     - Response caching
     - Retry with exponential backoff
     """
@@ -78,18 +80,21 @@ class PRDEngine:
         self,
         model: str = OLLAMA_MODEL,
         ollama_url: str = OLLAMA_URL,
+        grok_api_key: str = GROK_API_KEY,
         enable_cache: bool = True
     ):
         """
         Initialize the PRD engine.
 
         Args:
-            model: Model name (llama3.2, etc.)
+            model: Model name (llama3.2, grok-2, etc.)
             ollama_url: URL for Ollama API
+            grok_api_key: API key for Grok fallback
             enable_cache: Enable response caching
         """
         self.model = model
         self.ollama_url = ollama_url
+        self.grok_api_key = grok_api_key
         self.enable_cache = enable_cache
 
         # Initialize cache
@@ -105,11 +110,11 @@ class PRDEngine:
                 logger.warning(f"Ollama initialization failed: {e}")
                 self.ollama_client = None
 
-        # Validate Ollama is available
-        if not self.ollama_client:
+        # Validate at least one backend is available
+        if not self.ollama_client and not self.grok_api_key:
             raise ModelUnavailableError(
                 self.model,
-                reason="Ollama is not available. Please install and run Ollama."
+                reason="Neither Ollama nor Grok API is configured"
             )
 
         logger.info(f"PRD Engine initialized with model: {model}")
@@ -197,19 +202,36 @@ class PRDEngine:
     def _generate_with_retry(self, prompt: str, max_retries: int = 3) -> Dict[str, Any]:
         """
         Generate PRD with exponential backoff retry.
+
+        Tries Ollama first, falls back to Grok if configured.
         """
         last_error = None
 
-        for attempt in range(max_retries):
-            try:
-                logger.info(f"Attempt {attempt + 1}: Generating with Ollama ({self.model})")
-                return self._generate_ollama(prompt)
-            except Exception as e:
-                last_error = e
-                wait_time = 2 ** attempt
-                logger.warning(f"Ollama attempt {attempt + 1} failed: {e}. Retrying in {wait_time}s...")
-                if attempt < max_retries - 1:
-                    time.sleep(wait_time)
+        # Try Ollama first
+        if self.ollama_client:
+            for attempt in range(max_retries):
+                try:
+                    logger.info(f"Attempt {attempt + 1}: Generating with Ollama ({self.model})")
+                    return self._generate_ollama(prompt)
+                except Exception as e:
+                    last_error = e
+                    wait_time = 2 ** attempt
+                    logger.warning(f"Ollama attempt {attempt + 1} failed: {e}. Retrying in {wait_time}s...")
+                    if attempt < max_retries - 1:
+                        time.sleep(wait_time)
+
+        # Fallback to Grok
+        if self.grok_api_key:
+            for attempt in range(max_retries):
+                try:
+                    logger.info(f"Attempt {attempt + 1}: Generating with Grok API")
+                    return self._generate_grok(prompt)
+                except Exception as e:
+                    last_error = e
+                    wait_time = 2 ** attempt
+                    logger.warning(f"Grok attempt {attempt + 1} failed: {e}. Retrying in {wait_time}s...")
+                    if attempt < max_retries - 1:
+                        time.sleep(wait_time)
 
         # All attempts failed
         raise PRDGenerationError(
@@ -240,6 +262,42 @@ class PRDEngine:
             raise PRDGenerationError(
                 f"Ollama generation failed: {e}",
                 model=self.model
+            )
+
+    def _generate_grok(self, prompt: str) -> Dict[str, Any]:
+        """Generate PRD using Grok API."""
+        try:
+            headers = {
+                "Authorization": f"Bearer {self.grok_api_key}",
+                "Content-Type": "application/json"
+            }
+
+            data = {
+                "messages": [
+                    {"role": "user", "content": prompt}
+                ],
+                "model": "grok-2",
+                "temperature": 0.7,
+                "max_tokens": 4096
+            }
+
+            response = requests.post(
+                f"{GROK_API_URL}/chat/completions",
+                headers=headers,
+                json=data,
+                timeout=60
+            )
+
+            response.raise_for_status()
+            result = response.json()
+
+            content = result.get("choices", [{}])[0].get("message", {}).get("content", "")
+            return self._parse_response(content)
+
+        except Exception as e:
+            raise PRDGenerationError(
+                f"Grok API generation failed: {e}",
+                model="grok-2"
             )
 
     def _parse_response(self, content: str) -> Dict[str, Any]:
