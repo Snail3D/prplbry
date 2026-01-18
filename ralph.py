@@ -787,6 +787,14 @@ Include: project purpose, tech stack, features, aesthetics, constraints. Be thor
         if suggestion_id and vote:
             return self._handle_suggestion_vote(suggestion_id, vote)
 
+        # Check if user pasted a PRD to restore
+        if self.detect_prd_text(message):
+            success, restore_message = self.restore_from_prd_text(message)
+            if success:
+                return restore_message, [], self._update_prd_display()
+            else:
+                return restore_message, [], None
+
         # Track the user's message with ID and step
         if message:
             import uuid
@@ -1462,6 +1470,83 @@ Include: project purpose, tech stack, features, aesthetics, constraints. Be thor
         chat.conversation_state["auto_summary"] = save_data.get("auto_summary", "")
 
         return chat
+
+    @staticmethod
+    def detect_prd_text(text: str) -> bool:
+        """
+        Detect if pasted text looks like a PRD.
+        Checks for PRD legend header or PRD JSON structure.
+        """
+        text = text.strip()
+
+        # Check for PRD legend header
+        if "=== PRD LEGEND" in text or "=== PRD:" in text:
+            return True
+
+        # Check for PRD JSON structure with common keys
+        prd_indicators = ['"pn":', '"pd":', '"sp":', '"ts":', '"p":']
+        found_indicators = sum(1 for indicator in prd_indicators if indicator in text)
+        return found_indicators >= 3
+
+    def restore_from_prd_text(self, prd_text: str) -> Tuple[bool, str]:
+        """
+        Restore conversation state from pasted PRD text.
+        Returns (success, message).
+        """
+        import re
+
+        prd_text = prd_text.strip()
+
+        # Extract JSON from the PRD text
+        # Find JSON part (after the legend, between triple backticks or just the raw JSON)
+        json_match = re.search(r'\{[\s\S]*\}', prd_text)
+
+        if not json_match:
+            return False, "Couldn't find PRD data in that text."
+
+        try:
+            prd_data = json.loads(json_match.group())
+
+            # Map compressed keys back to full keys
+            reverse_key_map = {v: k for k, v in PRD_KEY_MAP.items()}
+
+            def expand_keys(obj):
+                """Recursively expand compressed keys"""
+                if isinstance(obj, dict):
+                    return {reverse_key_map.get(k, k): expand_keys(v) for k, v in obj.items()}
+                elif isinstance(obj, list):
+                    return [expand_keys(item) for item in obj]
+                return obj
+
+            expanded_prd = expand_keys(prd_data)
+
+            # Restore PRD to conversation state
+            state = self.conversation_state
+            state["prd"] = expanded_prd
+            state["step"] = 4  # Set to a point where PRD has content
+
+            # Extract basic info from PRD
+            if expanded_prd.get("pn"):
+                state["prd"]["pn"] = expanded_prd["pn"]
+                state["purpose"] = expanded_prd.get("pd", "")[:200]
+
+            if expanded_prd.get("pd"):
+                state["prd"]["pd"] = expanded_prd["pd"]
+                state["prd"]["sp"] = expanded_prd.get("sp", expanded_prd["pd"])
+
+            if expanded_prd.get("ts"):
+                state["prd"]["ts"] = expanded_prd["ts"]
+                state["tech_stack"] = f"{expanded_prd['ts'].get('lang', '')} {expanded_prd['ts'].get('fw', '')}"
+
+            # Count total tasks
+            total_tasks = sum(len(cat.get("t", [])) for cat in expanded_prd.get("p", {}).values())
+
+            return True, f"Restored PRD: **{expanded_prd.get('pn', 'Project')}** with {total_tasks} tasks. Ready to continue building!"
+
+        except json.JSONDecodeError as e:
+            return False, "That doesn't look like a valid PRD. Make sure you copied the complete PRD text."
+        except Exception as e:
+            return False, f"Error restoring PRD: {str(e)}"
 
     @staticmethod
     def delete_saved_conversation(filename: str) -> bool:
