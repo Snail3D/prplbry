@@ -187,6 +187,12 @@
             background: var(--accent);
             color: #fff;
             box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            position: relative;
+            padding-right: 35px;
+        }
+
+        .message.user:hover .delete-btn {
+            opacity: 1;
         }
 
         .message.assistant {
@@ -195,12 +201,6 @@
             color: #fff;
             box-shadow: 0 1px 2px rgba(0,0,0,0.1);
             animation: orangeToPurple 5s ease-out forwards;
-            position: relative;
-            padding-right: 35px;
-        }
-
-        .message.assistant:hover .delete-btn {
-            opacity: 1;
         }
 
         .delete-btn {
@@ -1006,8 +1006,8 @@
             contentDiv.innerHTML = content.replace(/\n/g, '<br>');
             msgDiv.appendChild(contentDiv);
 
-            // Add delete button to assistant messages
-            if (role === 'assistant') {
+            // Add delete button to user messages
+            if (role === 'user') {
                 const deleteBtn = document.createElement('button');
                 deleteBtn.className = 'delete-btn';
                 deleteBtn.innerHTML = '×';
