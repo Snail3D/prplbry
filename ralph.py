@@ -1046,9 +1046,6 @@ Include: project purpose, tech stack, features, aesthetics, constraints. Be thor
             # Ready to generate
             if action == "generate_prd" or "generate" in message_lower or "yes" in message_lower or "ready" in message_lower:
                 try:
-                    # Deep summarize before generating (only once!)
-                    self._auto_summarize_conversation()
-
                     prd = self.engine.generate_prd(
                         project_name=state["prd"]["pn"],
                         description=state["prd"]["pd"],
