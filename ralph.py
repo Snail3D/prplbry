@@ -1507,14 +1507,18 @@ Include: project purpose, tech stack, features, aesthetics, constraints. Be thor
             # Restore PRD to conversation state
             state = self.conversation_state
 
-            # Ensure PRD has complete structure
-            if "p" not in expanded_prd:
-                expanded_prd["p"] = {}
+            # Ensure PRD has complete structure (check both expanded and compressed keys)
+            prds_key = "prds" if "prds" in expanded_prd else "p"
+            if prds_key not in expanded_prd:
+                expanded_prd[prds_key] = {}
+
             for cat_id in ["00_security", "01_setup", "02_core", "03_api", "04_test"]:
-                if cat_id not in expanded_prd["p"]:
-                    expanded_prd["p"][cat_id] = {"n": cat_id.replace("_", " ").title(), "t": []}
-                if "t" not in expanded_prd["p"][cat_id]:
-                    expanded_prd["p"][cat_id]["t"] = []
+                if cat_id not in expanded_prd[prds_key]:
+                    expanded_prd[prds_key][cat_id] = {"n": cat_id.replace("_", " ").title(), "tasks": []}
+                # Check both expanded and compressed task key
+                tasks_key = "tasks" if "tasks" in expanded_prd[prds_key][cat_id] else "t"
+                if tasks_key not in expanded_prd[prds_key][cat_id]:
+                    expanded_prd[prds_key][cat_id][tasks_key] = []
 
             # Set basic info
             state["prd"] = expanded_prd
