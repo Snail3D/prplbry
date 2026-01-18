@@ -85,12 +85,13 @@
             top: 30px;
             left: 30px;
             display: flex;
-            gap: 12px;
+            flex-direction: column;
+            gap: 8px;
             opacity: 0;
             animation: fadeIn 0.8s ease-out 0.4s forwards;
         }
 
-        .privacy-link {
+        .nav-link {
             color: rgba(255,255,255,0.6);
             text-decoration: none;
             font-size: 11px;
@@ -99,7 +100,7 @@
             letter-spacing: -0.2px;
         }
 
-        .privacy-link:hover {
+        .nav-link:hover {
             color: rgba(255,255,255,0.9);
         }
 
@@ -112,31 +113,27 @@
             animation: fadeIn 1s ease-out 0.6s forwards;
         }
 
-        .prd-count {
-            font-size: 14px;
-            color: rgba(255,255,255,0.8);
-            font-weight: 400;
-            letter-spacing: -0.2px;
-            text-shadow: 0 1px 5px rgba(0,0,0,0.15);
-            margin-bottom: 8px;
-        }
-
-        .prd-count span {
-            color: #fff;
-            font-weight: 600;
-        }
-
         .love-link {
-            font-size: 12px;
-            color: rgba(255,255,255,0.7);
+            font-size: 16px;
+            color: rgba(255,255,255,0.8);
             text-decoration: none;
-            font-weight: 400;
+            font-weight: 500;
             letter-spacing: -0.2px;
             transition: all 0.3s ease;
         }
 
         .love-link:hover {
             color: rgba(255,255,255,1);
+        }
+
+        .berry-count {
+            font-size: 13px;
+            color: rgba(255,255,255,0.7);
+            font-weight: 400;
+            letter-spacing: -0.2px;
+            margin-top: 20px;
+            opacity: 0;
+            animation: fadeIn 1s ease-out 0.4s forwards;
         }
 
         @keyframes fadeInUp {
@@ -175,7 +172,8 @@
 </head>
 <body>
     <div class="nav-links">
-        <a href="/privacy" class="privacy-link">privacy</a>
+        <a href="https://buymeacoffee.com/snail3d" class="nav-link" target="_blank">Show ❤</a>
+        <a href="/privacy" class="nav-link">privacy</a>
     </div>
     <div class="container">
         <div class="hero">
@@ -184,10 +182,9 @@
             <a href="/chat" class="start-btn">
                 cook
             </a>
+            <p class="berry-count"><span>{{ prd_count }}</span> berries smashed</p>
         </div>
         <div class="footer">
-            <p class="prd-count"><span>{{ prd_count }}</span> {{ berry_text }}</p>
-            <p><a href="https://buymeacoffee.com/snail3d" class="love-link" target="_blank">Show ❤</a></p>
         </div>
     </div>
 </body>
