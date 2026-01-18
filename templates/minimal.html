@@ -118,6 +118,7 @@
             font-weight: 400;
             letter-spacing: -0.2px;
             text-shadow: 0 1px 5px rgba(0,0,0,0.15);
+            margin-bottom: 8px;
         }
 
         .prd-count span {
@@ -125,24 +126,17 @@
             font-weight: 600;
         }
 
-        .how-to {
-            font-size: 11px;
-            color: rgba(255,255,255,0.6);
-            max-width: 500px;
-            line-height: 1.6;
-            margin-top: 12px;
+        .love-link {
+            font-size: 12px;
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
             font-weight: 400;
             letter-spacing: -0.2px;
-            text-shadow: 0 1px 5px rgba(0,0,0,0.15);
+            transition: all 0.3s ease;
         }
 
-        .how-to code {
-            background: rgba(0,0,0,0.2);
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-family: 'SF Mono', Monaco, monospace;
-            font-size: 10px;
-            color: rgba(255,255,255,0.9);
+        .love-link:hover {
+            color: rgba(255,255,255,1);
         }
 
         @keyframes fadeInUp {
@@ -193,9 +187,7 @@
         </div>
         <div class="footer">
             <p class="prd-count"><span>{{ prd_count }}</span> {{ berry_text }}</p>
-            <p class="how-to">
-                Copy PRD → Open Claude Code → <code>cd</code> to your project folder → <code>claude --dangerously-skip-permissions</code>
-            </p>
+            <p><a href="https://buymeacoffee.com/snail3d" class="love-link" target="_blank">Show ❤</a></p>
         </div>
     </div>
 </body>
