@@ -927,6 +927,14 @@
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
+            // Detect browser refresh and redirect to new session
+            const navigationEntries = performance.getEntriesByType('navigation');
+            if (navigationEntries.length > 0 && navigationEntries[0].type === 'reload') {
+                // Browser was refreshed - redirect to new session
+                window.location.href = '/chat';
+                return;
+            }
+
             // Count existing user messages to set priority button correctly
             const existingUserMessages = document.querySelectorAll('.message.user').length;
             userMessageCount = existingUserMessages;
