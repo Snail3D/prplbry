@@ -796,15 +796,10 @@ Include: project purpose, tech stack, features, aesthetics, constraints. Be thor
         prd_preview = None
         backroom = None
 
-        # Step 0: Welcome - straight to planning
+        # Step 0: First message - start building PRD immediately
         if step == 0:
-            state["step"] = 1
-            return "", suggestions, prd_preview
-
-        # Step 1: Got the idea - start building PRD immediately
-        elif step == 1:
             state["purpose"] = message
-            state["step"] = 3  # Skip GitHub question, go straight to tech stack
+            state["step"] = 3  # Skip to tech stack
             state["prd"]["pn"] = self._infer_project_name()
             state["prd"]["pd"] = message[:200]
             state["prd"]["sp"] = message
@@ -820,6 +815,13 @@ Include: project purpose, tech stack, features, aesthetics, constraints. Be thor
 
             response = f"Got it. **{state['prd']['pn']}**.\n\nDo you have a tech stack in mind or any requirements you want to nail upfront?"
 
+            prd_preview = self._update_prd_display()
+            return response, suggestions, prd_preview
+
+        # Step 1: No longer used
+        elif step == 1:
+            state["step"] = 3
+            response = f"Do you have a tech stack in mind or any requirements you want to nail upfront?"
             prd_preview = self._update_prd_display()
             return response, suggestions, prd_preview
 
