@@ -1,100 +1,80 @@
 # 🍇 prplbry - Purple Berry PRD Creator
 
-AI-powered PRD creator that helps you build product requirements documents through natural conversation.
+Chat-based PRD creator. No AI API keys required - just conversation.
 
 ## Features
 
-- 🗣️ **Natural conversation flow** - Chat with Ralph to build your PRD
-- 🎯 **7-step guided process** - From vision to technical constraints
-- 🎨 **Aesthetics tracking** - Color schemes, inspiration sites, design vibes
-- 🔑 **Service tracking** - Automatically detects API keys you'll need
-- 📥 **One-click launch scripts** - Download shell scripts for Mac/Windows/Linux
-- 🐙 **GitHub integration** - Auto-init repos and configure remotes
-- 💾 **No login required** - Just open and use
-- 🆓 **Free AI** - Uses GROQ API (or Ollama for local)
+- 💬 **Chat interface** - Build your PRD through natural conversation
+- 📋 **Task priorities** - Toggle features between Medium/High priority
+- 🗑️ **Delete to rebuild** - Remove any message and PRD updates automatically
+- 📋 **PRD restore** - Copy a PRD, paste it later, continue building
+- 🔄 **Fresh sessions** - Browser refresh = completely new start
+- 🎯 **Multi-stack support** - Python, Flask, Node, React, ESP32, Arduino, and more
+- 💾 **Copy-ready PRD** - Export in compressed format ready for Claude Code
 
 ## Quick Start
 
-### Option 1: Use prplbry.com (easiest)
-Just visit https://prplbry.com and start building!
+### Use prplbry.com
+Visit https://prplbry.com and start building!
 
-### Option 2: Run locally
+### Run Locally
 
 ```bash
 # Install dependencies
 pip install -r requirements.txt
 
-# Set up environment
-cp .env.example .env
-# Edit .env and add your GROQ API key
+# Generate secret key
+python -c 'import secrets; print(secrets.token_urlsafe(32))'
 
 # Run the app
-python app.py
+SECRET_KEY=<your-key> python app.py
 ```
 
-Visit http://localhost:5000
+Visit http://localhost:8000
 
-## Environment Variables
+## How It Works
 
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `GROQ_API_KEY` | Your GROQ API key | Yes* |
-| `SECRET_KEY` | Flask secret key | Yes |
-| `DEBUG` | Debug mode | No (default: True) |
-| `PORT` | Port to run on | No (default: 5000) |
-| `OLLAMA_BASE_URL` | Local Ollama URL | No* |
+1. Tell Ralph what you're building (one sentence)
+2. Add your tech stack (or say "I don't know")
+3. Describe features and requirements
+4. Set priorities on each feature
+5. Export your PRD
 
-*Either GROQ_API_KEY or Ollama is required
+## PRD Format
 
-## Get a GROQ API Key
+The exported PRD uses compressed keys for efficiency:
 
-1. Visit https://groq.com
-2. Sign up for free account
-3. Get your API key from the dashboard
-4. Add it to your `.env` file
+```
+pn = project_name
+pd = project_description
+ts = tech_stack
+p  = prds (categories)
+t  = tasks
+pr = priority
+```
 
-## Development
+## Server Deployment
 
 ```bash
-# Install dev dependencies
+# Clone repo
+git clone https://github.com/Snail3D/prplbry.git
+cd prplbry
+
+# Setup
+python -m venv venv
+source venv/bin/activate
 pip install -r requirements.txt
 
-# Run with debug mode
-DEBUG=True python app.py
-
-# Run tests
-pytest tests/
+# Run with gunicorn
+gunicorn -w 4 -b 0.0.0.0:8000 app:app
 ```
 
-## Deployment
-
-### Render.com (recommended)
-
-1. Push code to GitHub
-2. Connect repo to Render.com
-3. Add environment variables:
-   - `GROQ_API_KEY`: Your GROQ API key
-   - `SECRET_KEY`: Generate a random string
-   - `DEBUG`: `False`
-   - `PORT`: `5000`
-
-4. Deploy! Render will auto-deploy from GitHub
-
-### Docker
-
-```bash
-docker build -t prplbry .
-docker run -p 5000:5000 --env-file .env prplbry
-```
+Set `SECRET_KEY` environment variable.
 
 ## License
 
-MIT - go wild!
+MIT
 
 ## Support
 
-If prplbry helps you build something cool, consider supporting the creator:
-
 https://buymeacoffee.com/snail3d
-
-☕ Your support keeps prplbry free and improving!
