@@ -1070,13 +1070,16 @@ Include: project purpose, tech stack, features, aesthetics, constraints. Be thor
         prd = self.conversation_state["prd"]
         state = self.conversation_state
 
-        # Update PRD with current info
-        if state.get("purpose"):
+        # Only update fields if they don't already exist (preserve restored PRD data)
+        if state.get("purpose") and not prd.get("pn"):
             prd["pn"] = self._infer_project_name()
+        if state.get("purpose") and not prd.get("pd"):
             prd["pd"] = state["purpose"][:200]
+        if state.get("purpose") and not prd.get("sp"):
             prd["sp"] = state["purpose"]
 
-        if state.get("tech_stack"):
+        # Only update tech stack if not already set
+        if state.get("tech_stack") and not prd.get("ts"):
             ts_map = {
                 "python": {"lang": "Py", "fw": "Flask", "db": "PostgreSQL", "oth": []},
                 "flask": {"lang": "Py", "fw": "Flask", "db": "PostgreSQL", "oth": []},
