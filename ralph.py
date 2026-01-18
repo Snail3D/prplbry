@@ -791,12 +791,21 @@ Include: project purpose, tech stack, features, aesthetics, constraints. Be thor
                 "flask": {"lang": "Py", "fw": "Flask", "db": "PostgreSQL", "oth": []},
                 "node": {"lang": "JS", "fw": "Express", "db": "MongoDB", "oth": []},
                 "react": {"lang": "JS", "fw": "React", "db": "None", "oth": ["Node.js"]},
+                "esp32": {"lang": "C++", "fw": "Arduino", "db": "None", "oth": ["ESP32", "WiFi"]},
+                "arduino": {"lang": "C++", "fw": "Arduino", "db": "None", "oth": ["Embedded"]},
+                "embedded": {"lang": "C", "fw": "Embedded", "db": "None", "oth": ["Hardware"]},
             }
             tech_input = message.lower()
+            tech_matched = False
             for key, val in ts_map.items():
                 if key in tech_input:
                     state["prd"]["ts"] = val
+                    tech_matched = True
                     break
+
+            # Default if no match
+            if not tech_matched:
+                state["prd"]["ts"] = {"lang": "C++", "fw": "Custom", "db": "None", "oth": []}
 
             # Add file structure based on tech
             if "flask" in tech_input or "python" in tech_input:
@@ -805,10 +814,15 @@ Include: project purpose, tech stack, features, aesthetics, constraints. Be thor
                 state["prd"]["fs"] = ["server.js", "package.json", "routes/", "public/"]
             elif "react" in tech_input:
                 state["prd"]["fs"] = ["src/", "package.json", "public/", "components/"]
+            elif "esp32" in tech_input or "arduino" in tech_input or "embedded" in tech_input:
+                state["prd"]["fs"] = ["src/main.cpp", "src/setup.h", "src/wifi.h", "platformio.ini", "README.md"]
+            else:
+                state["prd"]["fs"] = ["src/", "README.md", "config/"]
 
             state["step"] = 4
 
-            response = f"Got it. {state['prd']['ts']['fw']} it is.\n\nWhat's the main problem you're solving? Who's this for?"
+            fw = state['prd']['ts']['fw']
+            response = f"Got it. {fw} it is.\n\nWhat's the main problem you're solving? Who's this for?"
             suggestions = []
             backroom = None
             prd_preview = self._update_prd_display()
