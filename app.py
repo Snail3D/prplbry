@@ -257,9 +257,16 @@ limiter = Limiter(
     storage_uri="memory://"
 )
 
-# Initialize components
-prd_engine = get_prd_engine()
+# Initialize components (prd_engine is lazy-loaded only when needed)
+prd_engine = None  # Lazy-loaded on first use
 prd_store = get_prd_store()
+
+def get_prd_engine_lazy():
+    """Lazy-load prd_engine only when needed (AI PRD generation endpoint)."""
+    global prd_engine
+    if prd_engine is None:
+        prd_engine = get_prd_engine()
+    return prd_engine
 
 # ============================================================================
 # SESSION MANAGEMENT (Pricing & Task Limits)
@@ -2049,7 +2056,8 @@ def api_generate_prd():
 
         # Generate PRD
         logger.info(f"Generating PRD: {project_name} with {model}, {task_count} tasks")
-        prd_data = prd_engine.generate_prd(
+        engine = get_prd_engine_lazy()
+        prd_data = engine.generate_prd(
             project_name=project_name,
             description=description,
             starter_prompt=starter_prompt,
