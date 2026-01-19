@@ -353,7 +353,7 @@ class RalphChat:
 
     def __init__(self, session_id: str):
         self.session_id = session_id
-        self.engine = get_prd_engine()
+        self.engine = None  # Lazy-loaded only when AI PRD generation is needed
         self.conversation_state = {
             "step": 0,
             "gender": "male",  # male = Mr. Worms, female = Mrs. Worms
@@ -992,6 +992,9 @@ Include: project purpose, tech stack, features, aesthetics, constraints. Be thor
             # Ready to generate
             if action == "generate_prd" or "generate" in message_lower or "yes" in message_lower or "ready" in message_lower:
                 try:
+                    # Lazy-load the PRD engine only when AI generation is needed
+                    if self.engine is None:
+                        self.engine = get_prd_engine()
                     prd = self.engine.generate_prd(
                         project_name=state["prd"]["pn"],
                         description=state["prd"]["pd"],
