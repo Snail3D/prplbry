@@ -11,6 +11,12 @@ Chat-based PRD creator. No AI API keys required - just conversation.
 - 💾 **Copy-ready PRD** - Export in compressed format ready for Claude Code
 - 🔒 **Privacy-focused** - Nothing stored, nothing tracked
 
+## 🎬 Video Tutorial
+
+Watch the [YouTube playlist](https://www.youtube.com/playlist?list=PLJB4l6OZ0E3FvDzSlb6RZLNnB5CHcLu4S) for step-by-step guides:
+
+[![Watch Tutorial](https://img.shields.io/badge/YouTube-Watch%20Tutorial-red?style=for-the-badge&logo=youtube)](https://www.youtube.com/playlist?list=PLJB4l6OZ0E3FvDzSlb6RZLNnB5CHcLu4S)
+
 ## Quick Start
 
 ### Use prplbry.com
