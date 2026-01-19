@@ -1,0 +1,37 @@
+# Environment variables
+.env
+.env.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+
+# Logs
+*.log
+logs/
+
+# PRD data
+prd_data/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Server access docs (contains credentials)
+claude.md
+access.md
+
+# Backup files
+*.bak
