@@ -27,7 +27,9 @@ from flask import (
 )
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from flask_session import Session
 from werkzeug.utils import secure_filename
+import redis
 
 from config import (
     SECRET_KEY, DEBUG, ALLOWED_PROJECT_NAME_CHARS,
@@ -254,8 +256,19 @@ limiter = Limiter(
     app=app,
     key_func=get_remote_address,
     default_limits=["1000 per day", "100 per hour"],
-    storage_uri="memory://"
+    storage_uri="redis://localhost:6379",
+    strategy="fixed-window"
 )
+
+# Configure Flask-Session for Redis session storage
+app.config['SESSION_TYPE'] = 'redis'
+app.config['SESSION_REDIS'] = redis.from_url('redis://localhost:6379')
+app.config['SESSION_PERMANENT'] = False
+app.config['SESSION_USE_SIGNER'] = True
+app.config['SESSION_KEY_PREFIX'] = 'prplbry:'
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+Session(app)
 
 # Initialize components (prd_engine is lazy-loaded only when needed)
 prd_engine = None  # Lazy-loaded on first use

@@ -1,0 +1,32 @@
+[Unit]
+Description=Prplbry Flask Application
+After=network.target redis-server.service
+Requires=redis-server.service
+
+[Service]
+Type=notify
+User=root
+WorkingDirectory=/var/www/prplbry
+Environment="PATH=/var/www/prplbry/venv/bin"
+ExecStart=/var/www/prplbry/venv/bin/gunicorn \
+    --workers 8 \
+    --threads 2 \
+    --worker-class sync \
+    --worker-connections 1000 \
+    --max-requests 1000 \
+    --max-requests-jitter 50 \
+    --timeout 120 \
+    --bind 0.0.0.0:8000 \
+    --access-logfile /var/log/prplbry/access.log \
+    --error-logfile /var/log/prplbry/error.log \
+    --log-level info \
+    app:app
+
+ExecReload=/bin/kill -s HUP $MAINPID
+KillMode=mixed
+TimeoutStopSec=30
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
