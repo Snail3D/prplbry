@@ -475,42 +475,10 @@ def index():
     return render_template('minimal.html', prd_count=prd_count, berry_text=berry_text)
 
 
-@app.route('/create')
-def create_prd():
-    """PRD creation page."""
-    return render_template('create.html')
-
-
 @app.route('/privacy')
 def privacy():
     """Privacy policy page."""
     return render_template('privacy.html')
-
-
-@app.route('/prds')
-def list_prds():
-    """List all saved PRDs with pagination."""
-    page = request.args.get('page', 1, type=int)
-    per_page = 20
-
-    offset = (page - 1) * per_page
-    prds = prd_store.list_all(limit=per_page, offset=offset)
-
-    total = prd_store.count()
-    total_pages = (total + per_page - 1) // per_page
-
-    return render_template('list.html', prds=prds, page=page, total_pages=total_pages)
-
-
-@app.route('/prd/<prd_id>')
-def view_prd(prd_id: str):
-    """View a single PRD."""
-    try:
-        prd = prd_store.load(prd_id)
-        return render_template('view.html', prd=prd, prd_dict=prd.to_ralph_format())
-    except Exception as e:
-        flash(f'PRD not found: {prd_id}', 'error')
-        return redirect(url_for('list_prds'))
 
 
 # ============================================================================
@@ -939,10 +907,8 @@ def api_restore_prd():
 
 
 # ============================================================================
-# TERMINAL SCRIPT API
+# CONVERSATIONS API
 # ============================================================================
-
-@app.route('/api/terminal/script', methods=['POST'])
 def api_generate_terminal_script():
     """
     Generate a downloadable shell script to launch terminal with PRD.
