@@ -208,6 +208,84 @@ PRD_PHRASE_MAP = {
     "acceptance_criteria": "ac",
 }
 
+# ============ FEATURE DETECTION ============
+
+# Unified keyword list for detecting when user is describing features
+# These are ACTION words that indicate new functionality, not filler words
+FEATURE_KEYWORDS = [
+    # Core feature indicators
+    "feature", "functionality", "capability", "ability",
+    # Action verbs
+    "build", "create", "add", "implement", "integrate", "include",
+    "support", "handle", "manage", "process", "track", "monitor",
+    # UI/UX
+    "ui ", " ux", "interface", "design", "layout", "page", "screen",
+    "dashboard", "modal", "form", "button", "navigation", "menu",
+    # Data handling
+    "store", "save", "retrieve", "fetch", "sync", "export", "import",
+    # Communication
+    "send", "receive", "notify", "message", "email", "sms", "push",
+    # User actions
+    "login", "signup", "register", "auth", "profile", "settings",
+    # Real-time/async
+    "real-time", "live", "stream", "websocket", "async",
+    # External integrations
+    "api", "webhook", "integration", "connect", "link", "embed",
+    # Media
+    "upload", "download", "image", "video", "audio", "file",
+    # Gaming/interactive
+    "multiplayer", "game", "play", "score", "level", "achievement",
+    # Analytics
+    "analytics", "tracking", "report", "stat", "metric", "log",
+    # Search/filter
+    "search", "filter", "sort", "query",
+    # Admin
+    "admin", "manage", "moderate", "edit", "delete", "update",
+]
+
+# Words that explicitly mean the user wants to add something
+EXPLICIT_ADD_WORDS = [
+    "i want", "i need", "i'd like", "should have", "needs to",
+    "also add", "add another", "plus", "including", "with a",
+]
+
+# Patterns that indicate external references/libraries
+REFERENCE_PATTERNS = [
+    "using", "from", "based on", "inspired by", "similar to",
+    "github.com", "gitlab.com", "npmjs.com", "pypi.org",
+]
+
+def is_feature_description(message: str) -> bool:
+    """
+    Determine if a message is describing a feature vs casual chat.
+    Returns True if this looks like actionable feature content.
+    """
+    if not message or len(message) < 15:
+        return False
+
+    message_lower = message.lower()
+
+    # URL check - always capture
+    if "http://" in message_lower or "https://" in message_lower:
+        return True
+
+    # Reference patterns (libraries, github, etc)
+    for pattern in REFERENCE_PATTERNS:
+        if pattern in message_lower:
+            return True
+
+    # Explicit "I want/need" phrases
+    for phrase in EXPLICIT_ADD_WORDS:
+        if phrase in message_lower:
+            return True
+
+    # Feature keywords
+    for keyword in FEATURE_KEYWORDS:
+        if keyword in message_lower:
+            return True
+
+    return False
+
 
 def get_time_context() -> dict:
     """Get current time context for Ralph"""
@@ -865,8 +943,7 @@ Include: project purpose, tech stack, features, aesthetics, constraints. Be thor
             state["aesthetics"] = message
 
             # Check if user is giving more features/details
-            feature_keywords = ["feature", "add", "include", "want", "need", "should", "also", "and", "multiplayer", "ui", "design"]
-            if any(kw in message_lower for kw in feature_keywords) and len(message) > 20:
+            if is_feature_description(message):
                 # User is still describing features - add them!
                 new_task_id = len(state["prd"]["p"]["02_core"]["t"]) + 100
                 state["prd"]["p"]["02_core"]["t"].append({
@@ -892,7 +969,22 @@ Include: project purpose, tech stack, features, aesthetics, constraints. Be thor
                 prd_preview = self._update_prd_display()
                 return response, suggestions, prd_preview
 
-            # Otherwise move to constraints
+            # Otherwise move to constraints - add aesthetics to PRD
+            # Add aesthetics to project description so it's captured
+            if message and len(message) > 3:
+                current_desc = state["prd"].get("pd", "")
+                aesthetics_note = f"\n\nAesthetics: {message}"
+                state["prd"]["pd"] = current_desc + aesthetics_note
+
+                # Also add as a task in 02_core for UI/UX reference
+                state["prd"]["p"]["02_core"]["t"].append({
+                    "id": f"UIX-{len(state['prd']['p']['02_core']['t']) + 1:03d}",
+                    "ti": "Aesthetics & Feel",
+                    "d": f"Design aesthetic: {message}",
+                    "f": "design.md",
+                    "pr": "med"
+                })
+
             state["step"] = 6
             response = f"Noted. {message[:100]}...\n\nAny constraints or deadlines?"
 
@@ -901,9 +993,8 @@ Include: project purpose, tech stack, features, aesthetics, constraints. Be thor
 
         # Step 6: Got constraints - OR keep capturing features
         elif step == 6:
-            # Check if user is still adding features
-            feature_keywords = ["feature", "add", "include", "want", "need", "should", "also", "and", "multiplayer", "design", "interface"]
-            if any(kw in message_lower for kw in feature_keywords) and len(message) > 20:
+            # Check if user is still adding features or providing URLs/references
+            if is_feature_description(message):
                 # Still adding features - don't move forward yet
                 # Ensure the core category exists
                 if "02_core" not in state["prd"]["p"]:
@@ -933,8 +1024,18 @@ Include: project purpose, tech stack, features, aesthetics, constraints. Be thor
                 prd_preview = self._update_prd_display()
                 return response, suggestions, prd_preview
 
-            # Actual constraint - store it
+            # Actual constraint - add it as a task to capture it in PRD
             state["constraints"].append(message)
+
+            # Add the constraint as a setup task so it appears in the PRD
+            constraint_id = len(state["prd"]["p"]["01_setup"]["t"]) + 10
+            state["prd"]["p"]["01_setup"]["t"].append({
+                "id": f"SET-{constraint_id:03d}",
+                "ti": "Constraint: " + message[:40] + ("..." if len(message) > 40 else ""),
+                "d": message,
+                "f": "README.md",
+                "pr": "med"
+            })
 
             # Add security tasks
             state["prd"]["p"]["00_security"]["t"] = [
@@ -943,10 +1044,10 @@ Include: project purpose, tech stack, features, aesthetics, constraints. Be thor
             ]
 
             # Add setup tasks
-            state["prd"]["p"]["01_setup"]["t"] = [
+            state["prd"]["p"]["01_setup"]["t"].extend([
                 {"id": "SET-001", "ti": "Initialize project", "d": f"Create {state['prd']['pn']} structure", "f": "setup.py", "pr": "high"},
                 {"id": "SET-002", "ti": "Install deps", "d": "Install required packages", "f": "requirements.txt", "pr": "med"},
-            ]
+            ])
 
             state["step"] = 7
             total_tasks = sum(len(cat["t"]) for cat in state["prd"]["p"].values())
@@ -959,8 +1060,7 @@ Include: project purpose, tech stack, features, aesthetics, constraints. Be thor
         # Step 7: Generate full PRD - OR keep capturing more features
         elif step == 7:
             # Check if user is still adding features (common pattern!)
-            feature_keywords = ["feature", "add", "include", "want", "need", "should", "also", "and", "multiplayer", "design", "interface", "sound", "animation", "vibe"]
-            if any(kw in message_lower for kw in feature_keywords) and len(message) > 20 and "generate" not in message_lower:
+            if is_feature_description(message) and "generate" not in message_lower:
                 # Still in feature-capture mode
                 new_task_id = len(state["prd"]["p"]["02_core"]["t"]) + 100
                 state["prd"]["p"]["02_core"]["t"].append({
