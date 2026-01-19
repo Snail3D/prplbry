@@ -2,11 +2,8 @@
 Ralph Mode PRD Creator - Main Flask Application
 
 SEC-001: SECRET_KEY validation (via config.py)
-SEC-002: OCR Configuration (DEPRECATED - text-only mode)
-SEC-003: LLaMA Model Initialization (via prd_engine.py)
 X-910/X-1000: Input Validation
 X-911/X-1001: Rate Limiting
-API-001: API endpoint for PRD creation
 """
 import os
 import platform
@@ -34,14 +31,12 @@ import redis
 from config import (
     SECRET_KEY, DEBUG, ALLOWED_PROJECT_NAME_CHARS,
     MAX_PROJECT_NAME_LENGTH, MAX_DESCRIPTION_LENGTH,
-    MAX_PROMPT_LENGTH, PRD_STORAGE_PATH, UPLOAD_FOLDER,
-    OLLAMA_URL, OLLAMA_MODEL
+    MAX_PROMPT_LENGTH, PRD_STORAGE_PATH, UPLOAD_FOLDER
 )
 from exceptions import (
     PRDCreatorError, ValidationError,
-    PRDGenerationError, RateLimitError, handle_error
+    RateLimitError, handle_error
 )
-from prd_engine import get_prd_engine
 from prd_store import get_prd_store, PRD
 # OCR removed - text-only mode
 # from ocr_processor import get_ocr_processor
@@ -270,16 +265,8 @@ app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 Session(app)
 
-# Initialize components (prd_engine is lazy-loaded only when needed)
-prd_engine = None  # Lazy-loaded on first use
+# Initialize components
 prd_store = get_prd_store()
-
-def get_prd_engine_lazy():
-    """Lazy-load prd_engine only when needed (AI PRD generation endpoint)."""
-    global prd_engine
-    if prd_engine is None:
-        prd_engine = get_prd_engine()
-    return prd_engine
 
 # ============================================================================
 # SESSION MANAGEMENT (Pricing & Task Limits)
@@ -531,26 +518,13 @@ def chat_session(session_id: str):
 def api_status():
     """Get system status."""
     try:
-        # Check Ollama availability
-        import requests
-        ollama_available = False
-        try:
-            response = requests.get(f"{OLLAMA_URL}/api/tags", timeout=1)
-            ollama_available = response.status_code == 200
-        except:
-            pass
-
         return jsonify({
             "status": "online",
-            "model": OLLAMA_MODEL,
-            "model_available": ollama_available,
             "prd_count": prd_store.count()
         })
     except Exception as e:
         return jsonify({
             "status": "online",
-            "model": OLLAMA_MODEL,
-            "model_available": False,
             "prd_count": prd_store.count(),
             "error": str(e)
         })
@@ -1492,249 +1466,8 @@ def api_launch_terminal():
 
 
 # ============================================================================
-# OLLAMA MODEL MANAGEMENT API
+# BACKROOM API
 # ============================================================================
-
-@app.route('/api/ollama/models')
-def api_ollama_models():
-    """Get list of installed Ollama models."""
-    try:
-        import requests
-        response = requests.get(f"{OLLAMA_URL}/api/tags", timeout=5)
-
-        if response.status_code == 200:
-            data = response.json()
-            models = []
-
-            if 'models' in data:
-                for model in data['models']:
-                    models.append({
-                        'name': model['name'],
-                        'size': model.get('size', 0),
-                        'modified': model.get('modified_at', '')
-                    })
-
-            return jsonify({
-                "success": True,
-                "models": models
-            })
-        else:
-            return jsonify({
-                "success": False,
-                "error": "Ollama not responding"
-            }), 503
-
-    except Exception as e:
-        logger.exception("Ollama models error")
-        return jsonify({
-            "success": False,
-            "error": str(e)
-        }), 500
-
-
-@app.route('/api/ollama/search')
-def api_ollama_search():
-    """Search for Ollama models in the library."""
-    try:
-        query = request.args.get('q', '')
-
-        # Ollama library search - using a predefined list of popular models
-        # In production, you'd scrape ollama.com/library or use their API
-        popular_models = [
-            {"name": "llama3.2", "description": "Meta's Llama 3.2 - 3B parameter model"},
-            {"name": "llama3.2:1b", "description": "Meta's Llama 3.2 - 1B parameter model (lightweight)"},
-            {"name": "llama3.1", "description": "Meta's Llama 3.1 - 8B parameter model"},
-            {"name": "llama3", "description": "Meta's Llama 3 - 70B parameter model"},
-            {"name": "mistral", "description": "Mistral 7B - high quality open source model"},
-            {"name": "mixtral", "description": "Mixtral 8x7B - mixture of experts model"},
-            {"name": "codellama", "description": "Code Llama - model fine-tuned for coding"},
-            {"name": "deepseek-coder", "description": "DeepSeek Coder - specialized for code"},
-            {"name": "phi3", "description": "Microsoft Phi-3 - 3.8B parameter model"},
-            {"name": "gemma2", "description": "Google Gemma 2 - lightweight yet powerful"},
-            {"name": "qwen2.5", "description": "Alibaba Qwen 2.5 - multilingual model"},
-            {"name": "nomic-embed-text", "description": "Nomic embedding model for text"},
-        ]
-
-        # Filter by query
-        if query:
-            filtered = [m for m in popular_models if query.lower() in m['name'].lower()]
-        else:
-            filtered = popular_models[:10]
-
-        return jsonify({
-            "success": True,
-            "models": filtered
-        })
-
-    except Exception as e:
-        logger.exception("Ollama search error")
-        return jsonify({
-            "success": False,
-            "error": str(e)
-        }), 500
-
-
-@app.route('/api/ollama/pull', methods=['POST'])
-@limiter.limit("10 per hour")
-def api_ollama_pull():
-    """Pull/download an Ollama model."""
-    try:
-        data = request.get_json()
-        model = data.get('model', '')
-
-        if not model:
-            return jsonify({"error": "Model name is required"}), 400
-
-        import requests
-        # Pull model (this is async, will take time)
-        response = requests.post(
-            f"{OLLAMA_URL}/api/pull",
-            json={"name": model},
-            timeout=300  # 5 minute timeout
-        )
-
-        if response.status_code == 200:
-            return jsonify({
-                "success": True,
-                "message": f"Model {model} pulled successfully"
-            })
-        else:
-            return jsonify({
-                "success": False,
-                "error": "Failed to pull model"
-            }), 500
-
-    except Exception as e:
-        logger.exception("Ollama pull error")
-        return jsonify({
-            "success": False,
-            "error": str(e)
-        }), 500
-
-
-# ============================================================================
-# BACKROOM DEBATE API
-# ============================================================================
-
-@app.route('/api/backroom/debate', methods=['POST'])
-@limiter.limit("20 per hour")
-def api_backroom_debate():
-    """
-    Generate a backroom debate between Stool (skeptic) and Gomer (optimist).
-    Returns 10 exchanges (5 each) with typing effect for display.
-    """
-    try:
-        data = request.get_json()
-        context = data.get('context', 'Building a web application')
-
-        # Import for LLM calls
-        import requests
-
-        # Define analyst personas
-        ANALYST_A = {"name": "Stool", "role": "The Skeptic", "emoji": "🤔"}
-        ANALYST_B = {"name": "Gomer", "role": "The Optimist", "emoji": "💡"}
-
-        # Build the debate
-        exchanges = []
-
-        # First message - Stool starts
-        prompt_1 = f"""Stool (skeptic) analyzing project. 1-2 sentences MAX.
-CTX: {context}
-Question ONE thing: need, problem, or gap. Direct, punchy."""
-
-        response_1 = query_llm(prompt_1)
-        if response_1:
-            exchanges.append({"analyst": "Stool", "message": response_1})
-
-        # Generate 9 more exchanges (alternating)
-        for i in range(9):
-            last_msg = exchanges[-1]["message"]
-
-            if i % 2 == 0:  # Gomer's turn
-                prompt = f"""Gomer (optimist) responds. 1-2 sentences MAX.
-CTX: {context}
-STOOL: {last_msg}
-Counter with ONE use case or opportunity. Punchy."""
-                analyst = "Gomer"
-            else:  # Stool's turn
-                prompt = f"""Stool (skeptic) responds. 1-2 sentences MAX.
-CTX: {context}
-GOMER: {last_msg}
-ONE concern or edge case. Acknowledge good points briefly."""
-                analyst = "Stool"
-
-            response = query_llm(prompt)
-            if response:
-                exchanges.append({"analyst": analyst, "message": response})
-
-        return jsonify({
-            "success": True,
-            "debate": exchanges
-        })
-
-    except Exception as e:
-        logger.exception("Backroom debate error")
-        return jsonify({
-            "success": False,
-            "error": str(e)
-        }), 500
-
-
-def query_llm(prompt: str) -> str:
-    """Query the LLM (Ollama or Grok) with a prompt."""
-    try:
-        import requests
-
-        # Check if Grok API key is configured
-        grok_api_key = os.environ.get("GROK_API_KEY") or os.environ.get("GROQ_API_KEY")
-
-        if grok_api_key:
-            # Use Grok/Groq
-            try:
-                response = requests.post(
-                    "https://api.groq.com/openai/v1/chat/completions",
-                    headers={
-                        "Authorization": f"Bearer {grok_api_key}",
-                        "Content-Type": "application/json"
-                    },
-                    json={
-                        "model": "llama-3.3-70b-versatile",
-                        "messages": [{"role": "user", "content": prompt}],
-                        "temperature": 0.8,
-                        "max_tokens": 150
-                    },
-                    timeout=30
-                )
-
-                if response.status_code == 200:
-                    data = response.json()
-                    return data["choices"][0]["message"]["content"].strip()
-            except:
-                pass  # Fall through to Ollama
-
-        # Use Ollama
-        ollama_model = os.environ.get("OLLAMA_MODEL", "llama3.2")
-        response = requests.post(
-            f"{OLLAMA_URL}/api/generate",
-            json={
-                "model": ollama_model,
-                "prompt": prompt,
-                "stream": False,
-                "options": {"temperature": 0.8, "num_predict": 150}
-            },
-            timeout=60
-        )
-
-        if response.status_code == 200:
-            data = response.json()
-            return data.get("response", "").strip()
-
-        return ""
-
-    except Exception as e:
-        logger.error(f"LLM query error: {e}")
-        return ""
-
 
 @app.route('/api/chat/backroom-add', methods=['POST'])
 def api_backroom_add():
@@ -1989,83 +1722,6 @@ def api_analyze_image():
         }), 500
 
 
-@app.route('/api/prd/generate', methods=['POST'])
-@limiter.limit("10 per minute")  # X-911/X-1001: Rate limiting
-@validate_request  # X-910/X-1000: Input validation
-def api_generate_prd():
-    """
-    API-001: API endpoint for PRD creation
-
-    Generates a Ralph Mode PRD based on user input.
-    """
-    try:
-        data = request.get_json()
-
-        # Extract fields
-        project_name = data.get('project_name', '').strip()
-        description = data.get('description', '').strip()
-        starter_prompt = data.get('starter_prompt', '').strip()
-        model = data.get('model', OLLAMA_MODEL)
-        task_count = data.get('task_count', 34)
-        tech_stack_preset = data.get('tech_stack', 'python-flask')
-
-        # Validate inputs
-        validate_project_name(project_name)
-
-        if not description or len(description) > MAX_DESCRIPTION_LENGTH:
-            raise ValidationError(
-                f"Description must be 1-{MAX_DESCRIPTION_LENGTH} characters",
-                field="description"
-            )
-
-        if not starter_prompt or len(starter_prompt) > MAX_PROMPT_LENGTH:
-            raise ValidationError(
-                f"Starter prompt must be 1-{MAX_PROMPT_LENGTH} characters",
-                field="starter_prompt"
-            )
-
-        if task_count < 5 or task_count > 100:
-            raise ValidationError(
-                "Task count must be between 5 and 100",
-                field="task_count",
-                value=task_count
-            )
-
-        tech_stack = validate_tech_stack(tech_stack_preset)
-
-        # Generate PRD
-        logger.info(f"Generating PRD: {project_name} with {model}, {task_count} tasks")
-        engine = get_prd_engine_lazy()
-        prd_data = engine.generate_prd(
-            project_name=project_name,
-            description=description,
-            starter_prompt=starter_prompt,
-            tech_stack=tech_stack,
-            task_count=task_count
-        )
-
-        # Create PRD object and save
-        prd = PRD.from_ralph_format(prd_data)
-        prd_id = prd_store.save(prd)
-
-        logger.info(f"PRD generated and saved: {prd_id}")
-
-        return jsonify({
-            "success": True,
-            "id": prd_id,
-            "project_name": prd.project_name,
-            "prd": prd_data
-        })
-
-    except ValidationError as e:
-        return jsonify(handle_error(e)), 400
-    except PRDGenerationError as e:
-        return jsonify(handle_error(e)), 500
-    except Exception as e:
-        logger.exception("Unexpected error in PRD generation")
-        return jsonify(handle_error(e)), 500
-
-
 @app.route('/api/prd/<prd_id>', methods=['GET'])
 def api_get_prd(prd_id: str):
     """Get a PRD by ID."""
@@ -2205,8 +1861,6 @@ if __name__ == '__main__':
 ╚═══════════════════════════════════════════════════════════════════╝
     """)
 
-    print(f"> Model: {OLLAMA_MODEL}")
-    print(f"> Ollama URL: {OLLAMA_URL}")
     print(f"> Storage: {PRD_STORAGE_PATH}")
     print(f"> Debug: {DEBUG}")
     print()

@@ -17,9 +17,6 @@ import requests
 from datetime import datetime
 from typing import Dict, List, Optional, Tuple
 
-from prd_engine import get_prd_engine
-from config import OLLAMA_URL
-
 logger = logging.getLogger(__name__)
 
 # ============ RALPH PERSONALITY ============
@@ -353,7 +350,6 @@ class RalphChat:
 
     def __init__(self, session_id: str):
         self.session_id = session_id
-        self.engine = None  # Lazy-loaded only when AI PRD generation is needed
         self.conversation_state = {
             "step": 0,
             "gender": "male",  # male = Mr. Worms, female = Mrs. Worms
@@ -991,33 +987,8 @@ Include: project purpose, tech stack, features, aesthetics, constraints. Be thor
 
             # Ready to generate
             if action == "generate_prd" or "generate" in message_lower or "yes" in message_lower or "ready" in message_lower:
-                try:
-                    # Lazy-load the PRD engine only when AI generation is needed
-                    if self.engine is None:
-                        self.engine = get_prd_engine()
-                    prd = self.engine.generate_prd(
-                        project_name=state["prd"]["pn"],
-                        description=state["prd"]["pd"],
-                        starter_prompt=state["prd"]["sp"],
-                        tech_stack=state["prd"]["ts"],
-                        task_count=34
-                    )
-                    state["prd"] = prd
-                    state["step"] = 8
-
-                    total_tasks = sum(len(cat["t"]) for cat in prd.get("p", {}).values())
-
-                    response = (
-                        f"Done. **{prd['pn']}** ready.\n\n"
-                        f"{total_tasks} tasks. PRD is below.\n\n"
-                    )
-                    prd_preview = format_prd_display(prd, compressed=True)
-                    return response, suggestions, prd_preview
-
-                except Exception as e:
-                    logger.error(f"PRD generation failed: {e}")
-                    response = f"Error: {str(e)}\n\nTry again?"
-                    return response, suggestions, None
+                response = "*shakes head* Sorry, but AI PRD generation isn't available right now. \n\nYou can build your PRD manually by telling me about your features - I'll help organize everything. Just keep describing what you need!"
+                return response, suggestions, None
             else:
                 total_tasks = sum(len(cat["t"]) for cat in state["prd"]["p"].values())
 
