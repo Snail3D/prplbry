@@ -210,81 +210,160 @@ PRD_PHRASE_MAP = {
 
 # ============ FEATURE DETECTION ============
 
-# Unified keyword list for detecting when user is describing features
-# These are ACTION words that indicate new functionality, not filler words
-FEATURE_KEYWORDS = [
-    # Core feature indicators
-    "feature", "functionality", "capability", "ability",
-    # Action verbs
-    "build", "create", "add", "implement", "integrate", "include",
-    "support", "handle", "manage", "process", "track", "monitor",
-    # UI/UX
-    "ui ", " ux", "interface", "design", "layout", "page", "screen",
-    "dashboard", "modal", "form", "button", "navigation", "menu",
-    # Data handling
-    "store", "save", "retrieve", "fetch", "sync", "export", "import",
-    # Communication
-    "send", "receive", "notify", "message", "email", "sms", "push",
-    # User actions
-    "login", "signup", "register", "auth", "profile", "settings",
-    # Real-time/async
-    "real-time", "live", "stream", "websocket", "async",
-    # External integrations
-    "api", "webhook", "integration", "connect", "link", "embed",
-    # Media
-    "upload", "download", "image", "video", "audio", "file",
-    # Gaming/interactive
-    "multiplayer", "game", "play", "score", "level", "achievement",
-    # Analytics
-    "analytics", "tracking", "report", "stat", "metric", "log",
-    # Search/filter
-    "search", "filter", "sort", "query",
-    # Admin
-    "admin", "manage", "moderate", "edit", "delete", "update",
+# Skip words - phrases that are NOT features
+SKIP_PHRASES = [
+    "ready", "generate", "done", "that's it", "that is it",
+    "looks good", "perfect", "sounds good", "okay", "ok",
+    "sure", "yeah", "yes", "yep", "nope", "nah",
+    "i think", "maybe", "possibly", "not sure",
+    "what do you think", "how about", "any ideas",
+    "don't know", "no idea", "whatever you want",
+    "let me think", "hold on", "one sec", "wait",
 ]
 
-# Words that explicitly mean the user wants to add something
-EXPLICIT_ADD_WORDS = [
+# Technical keywords across all domains - triggers feature capture
+TECH_KEYWORDS = [
+    # Software/Web
+    "api", "endpoint", "route", "middleware", "controller", "service", "repository",
+    "request", "response", "header", "cookie", "session", "token", "auth", "oauth", "jwt",
+    "websocket", "rest", "graphql", "grpc", "http", "https", "ssl", "tls",
+    "frontend", "backend", "fullstack", "server", "client", "database", "db",
+    "query", "schema", "migration", "index", "join", "aggregate", "transaction",
+    "cache", "redis", "queue", "job", "worker", "task", "schedule", "cron",
+
+    # UI/UX/Frontend
+    "ui", "ux", "interface", "design", "layout", "page", "screen", "view",
+    "component", "widget", "modal", "dialog", "form", "input", "button",
+    "navigation", "menu", "sidebar", "header", "footer", "dashboard",
+    "table", "list", "grid", "card", "chart", "graph", "visualization",
+    "animation", "transition", "effect", "theme", "style", "css", "scss",
+
+    # Hardware/Embedded/Robotics
+    "pin", "gpio", "sensor", "actuator", "motor", "servo", "stepper", "relay",
+    "pwm", "i2c", "spi", "uart", "serial", "adc", "dac", "interrupt", "timer",
+    "counter", "voltage", "current", "power", "battery", "charge", "discharge",
+    "measurement", "measure", "reading", "calibrate", "calibration", "offset",
+    "gpio", "digital", "analog", "input", "output", "inout", "bidirectional",
+    "embedded", "microcontroller", "mcu", "firmware", "bootloader", "flash",
+    "register", "memory", "ram", "rom", "eeprom", "sram", "dram",
+    "clock", "oscillator", "crystal", "resonator", "frequency", "hz", "khz", "mhz",
+    "protocol", "modbus", "can", "lin", "ethernet", "wifi", "bluetooth", "ble", "zigbee",
+    "loRa", "lorawan", "rf", "radio", "wireless", "antenna", "signal",
+    "encoder", "decoder", "driver", "buffer", "amplifier", "transistor", "mosfet",
+    "robot", "robotics", "arm", "gripper", "joint", "axis", "stepper", "dc motor",
+    "sensor fusion", "imu", "gyroscope", "accelerometer", "magnetometer", "barometer",
+    "temperature", "humidity", "pressure", "light", "proximity", "distance", "ultrasonic",
+    "lidar", "radar", "camera", "opencv", "vision", "detection", "recognition",
+
+    # IoT/Connectivity
+    "mqtt", "coap", "mqtt", "subscriber", "publisher", "topic", "broker",
+    "thingspeak", "aws iot", "azure iot", "google cloud iot", "particle", "blynk",
+    "home assistant", "smart home", "automation", "smartthings", "hubitat",
+
+    # Data/Analytics
+    "analytics", "tracking", "metric", "statistics", "stats", "log", "logging",
+    "monitor", "monitoring", "alert", "alarm", "notification", "notify",
+    "report", "reporting", "export", "import", "csv", "json", "xml", "yaml",
+    "graph", "plot", "chart", "visualize", "visualization", "dashboard",
+    "aggregate", "average", "mean", "median", "sum", "count", "min", "max",
+
+    # Auth/Security
+    "authentication", "authorization", "login", "logout", "signup", "register",
+    "password", "hash", "encrypt", "decrypt", "cipher", "aes", "rsa",
+    "permission", "role", "user", "admin", "moderator", "guest", "anonymous",
+    "2fa", "otp", "verification", "email verification", "captcha", "rate limit",
+
+    # Media
+    "upload", "download", "image", "video", "audio", "file", "document",
+    "thumbnail", "resize", "crop", "compress", "stream", "streaming",
+    "ffmpeg", "transcode", "format", "codec", "mp4", "mp3", "wav", "png", "jpg",
+
+    # Gaming/Interactive
+    "game", "play", "player", "score", "level", "achievement", "leaderboard",
+    "multiplayer", "real-time", "realtime", "lobby", "matchmaking", "server",
+    "client", "physics", "collision", "sprite", "animation", "frame",
+
+    # E-commerce/Payment
+    "payment", "checkout", "cart", "order", "product", "inventory", "stock",
+    "stripe", "paypal", "square", "braintree", "refund", "transaction",
+    "shipping", "delivery", "tax", "discount", "coupon", "promo",
+
+    # Search/Filter
+    "search", "filter", "sort", "pagination", "page", "limit", "offset",
+    "elastic", "elasticsearch", "algolia", "lunr", "solr", "sphinx",
+
+    # DevOps/Infrastructure
+    "deploy", "deployment", "ci", "cd", "pipeline", "docker", "kubernetes", "k8s",
+    "container", "image", "build", "test", "lint", "format", "unit test",
+    "integration test", "e2e", "end to end", "github actions", "jenkins",
+    "aws", "azure", "gcp", "heroku", "vercel", "netlify", "cloudflare",
+    "cdn", "load balancer", "reverse proxy", "nginx", "apache", "traefik",
+
+    # Storage/File
+    "storage", "s3", "blob", "file", "directory", "folder", "path", "url",
+    "bucket", "drive", "dropbox", "google drive", "onedrive",
+
+    # Integrations/External
+    "integration", "integrate", "webhook", "callback", "api", "sdk", "library",
+    "package", "module", "plugin", "extension", "addon",
+    "slack", "discord", "telegram", "email", "sms", "twilio", "sendgrid",
+    "google", "facebook", "twitter", "github", "gitlab", "bitbucket",
+
+    # Data structures
+    "array", "list", "map", "dict", "hash", "set", "tree", "graph", "heap", "stack", "queue",
+    "class", "struct", "enum", "interface", "type", "function", "method", "variable",
+
+    # Control flow
+    "loop", "iterate", "recursion", "async", "await", "promise", "future", "callback",
+    "event", "listener", "observer", "publisher", "subscriber", "emit", "trigger",
+
+    # General technical terms
+    "feature", "functionality", "capability", "support", "handle", "process",
+    "build", "create", "add", "implement", "include", "connect", "link",
+    "store", "save", "load", "retrieve", "fetch", "send", "receive",
+]
+
+# Patterns that explicitly mean user is adding something
+EXPLICIT_ADD_PATTERNS = [
     "i want", "i need", "i'd like", "should have", "needs to",
     "also add", "add another", "plus", "including", "with a",
-]
-
-# Patterns that indicate external references/libraries
-REFERENCE_PATTERNS = [
-    "using", "from", "based on", "inspired by", "similar to",
-    "github.com", "gitlab.com", "npmjs.com", "pypi.org",
+    "using", "from", "based on", "reference", "referencing",
 ]
 
 def is_feature_description(message: str) -> bool:
     """
     Determine if a message is describing a feature vs casual chat.
     Returns True if this looks like actionable feature content.
+
+    Permissive approach: capture substantive messages, skip only obvious filler.
     """
-    if not message or len(message) < 15:
+    if not message or len(message) < 10:
         return False
 
     message_lower = message.lower()
+
+    # Skip obvious non-feature phrases
+    for skip in SKIP_PHRASES:
+        if skip in message_lower:
+            return False
 
     # URL check - always capture
     if "http://" in message_lower or "https://" in message_lower:
         return True
 
-    # Reference patterns (libraries, github, etc)
-    for pattern in REFERENCE_PATTERNS:
+    # Explicit "I want/need/using" patterns
+    for pattern in EXPLICIT_ADD_PATTERNS:
         if pattern in message_lower:
             return True
 
-    # Explicit "I want/need" phrases
-    for phrase in EXPLICIT_ADD_WORDS:
-        if phrase in message_lower:
-            return True
-
-    # Feature keywords
-    for keyword in FEATURE_KEYWORDS:
+    # Technical keyword match
+    for keyword in TECH_KEYWORDS:
         if keyword in message_lower:
             return True
 
-    return False
+    # Default: If message is substantive (not too short) and not explicitly skipped,
+    # assume it's a feature. Users are in PRD building mode - capture their intent.
+    return len(message.split()) >= 3
 
 
 def get_time_context() -> dict:
