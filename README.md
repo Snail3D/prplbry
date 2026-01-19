@@ -6,13 +6,23 @@ Chat with Ralph. Build a PRD. Done.
 
 ---
 
-## What It Does
+## The Ralph Loop
 
-You chat. Ralph listens. PRD appears.
+**Ralph pre-builds your PRD while you chat.**
 
-Type what you're building. Ralph asks the right questions. Features get organized. Categories form. Tasks emerge. Export to Claude Code and you're building.
+He starts with the exact structure Claude Code's agent loop expects:
 
-That's the Ralph loop.
+```
+00_security → 01_setup → 02_core → 03_api → 04_test
+```
+
+Every task gets an ID: `SEC-001`, `SET-001`, `CORE-100`
+
+That's the secret sauce.
+
+When you export, Claude Code reads the IDs and runs the loop automatically.
+
+**You chat → Ralph fills structure → Agent executes**
 
 ---
 
@@ -20,7 +30,7 @@ That's the Ralph loop.
 
 1. Go to **prplbry.com**
 2. Tell Ralph your idea
-3. Watch the PRD build itself
+3. Watch the PRD build itself live
 4. Copy, paste into Claude Code
 
 *My cat's breath smells like cat food.* — Hee hee.
@@ -32,9 +42,9 @@ That's the Ralph loop.
 | What | How |
 |------|-----|
 | **Chat** | Natural conversation |
+| **Live PRD** | Updates in real-time |
 | **Restore** | Paste any PRD, keep building |
 | **Export** | Claude Code ready |
-| **Privacy** | Zero storage, zero tracking |
 
 ---
 
@@ -44,11 +54,11 @@ We store nothing.
 
 - No analytics
 - No tracking
-- no cookies that linger
+- No persistent cookies
 - No data sold
-- No logs kept
+- No logs
 
-Your PRD generates in real-time. Once you copy it, it's gone. Forever.
+Your PRD generates in real-time. Once you copy, it's gone. Forever.
 
 ---
 
@@ -69,7 +79,7 @@ Visit `localhost:8000`
 
 **No tracking. Ever.**
 
-PRs adding analytics, telemetry, or surveillance will be rejected. This is non-negotiable.
+PRs adding analytics, telemetry, or surveillance will be rejected.
 
 ---
 
