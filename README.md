@@ -1,6 +1,6 @@
 # 🫐 prplbry
 
-Chat with Ralph. Build a PRD. Done.
+**[**prplbry.com**](https://prplbry.com)** — Chat with Ralph. Build a PRD. Done.
 
 *The hamster tastes like chicken.* — Hee hee.
 
