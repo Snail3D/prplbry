@@ -7,12 +7,12 @@
 
 ## Quick Access
 ```bash
-# SSH directly
+# SSH directly (enter password when prompted)
 ssh root@69.164.201.191
-# Password: boogerBitersRpKewl26!
 
-# SSH with sshpass (one-liner)
-sshpass -p 'boogerBitersRpKewl26!' ssh -o StrictHostKeyChecking=no root@69.164.201.191
+# SSH with sshpass (use double quotes for password with !)
+sshpass -p "boogerBitersRpKewl26!" ssh -o StrictHostKeyChecking=no root@69.164.201.191
+```
 
 ## App Location
 - **Path**: /var/www/prplbry
@@ -27,8 +27,8 @@ ps aux | grep 'python.*app.py' | grep -v grep
 # Kill the app
 pkill -f 'python.*app.py'
 
-# Restart the app
-cd /var/www/prplbry && nohup ./venv/bin/python app.py > /dev/null 2>&1 &
+# Restart the app (run in background)
+cd /var/www/prplbry && ./venv/bin/python app.py &
 
 # View logs
 journalctl -u prplbry -f
@@ -38,14 +38,15 @@ tail -f /var/www/prplbry/app.log
 
 ## Git Deployment
 ```bash
-# Pull latest changes
-cd /var/www/prplbry && git pull
+# Pull latest changes (set git remote to SSH first)
+cd /var/www/prplbry && git remote set-url origin git@github.com:Snail3D/prplbry.git
+git pull
 
 # Or force reset if conflicts
-cd /var/www/prplbry && git fetch origin && git reset --hard origin/main
+git fetch origin && git reset --hard origin/main
 
 # Then restart app
-pkill -f 'python.*app.py' && nohup ./venv/bin/python app.py > /dev/null 2>&1 &
+cd /var/www/prplbry && ./venv/bin/python app.py &
 ```
 
 ## Nginx Config

@@ -21,14 +21,16 @@ Password: `boogerBitersRpKewl26!`
 
 ### Deploy Commands
 ```bash
-# SSH and deploy
-sshpass -p 'boogerBitersRpKewl26!' ssh -o StrictHostKeyChecking=no root@69.164.201.191 "cd /var/www/prplbry && git pull && pkill -f 'python.*app.py' && sleep 1 && cd /var/www/prplbry && nohup ./venv/bin/python app.py > /dev/null 2>&1 &"
+# SSH and deploy (use double quotes for password with special character)
+sshpass -p "boogerBitersRpKewl26!" ssh -o StrictHostKeyChecking=no root@69.164.201.191 "cd /var/www/prplbry && git pull"
+
+# Restart app (kill and run in background)
+sshpass -p "boogerBitersRpKewl26!" ssh -o StrictHostKeyChecking=no root@69.164.201.191 "cd /var/www/prplbry && ./venv/bin/python app.py"
 ```
 
 ## Key Features
-- Chat-based PRD generation
-- Task priority management (medium/high)
+- Chat-based PRD generation (no AI required for chat)
+- All tasks set to high priority
 - PRD copy/paste restore functionality
 - Browser refresh creates new session
-- Delete messages and rebuild PRD
 - Support for multiple tech stacks (Python, Flask, Node, React, ESP32, Arduino)
