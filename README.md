@@ -62,7 +62,7 @@ Your PRD generates in real-time. Once you copy, it's gone. Forever.
 
 ---
 
-## Run It
+## Self-Deployment
 
 ```bash
 git clone https://github.com/Snail3D/prplbry.git
