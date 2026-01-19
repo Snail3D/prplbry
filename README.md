@@ -87,6 +87,22 @@ Optional (for Redis sessions/rate limiting):
 - **Rate limiting**: 10000/day, 1000/hour per IP
 - Handles hundreds of concurrent users easily
 
+## Contributing
+
+Contributions are welcome, but please note:
+
+**No tracking ever.**
+
+Pull requests that add any form of tracking, analytics, or user surveillance will be automatically rejected. This includes but is not limited to:
+
+- Analytics scripts (Google Analytics, Plausible, Fathom, etc.)
+- Telemetry or data collection
+- User fingerprinting
+- Behavioral tracking
+- Third-party trackers
+
+If your contribution adds tracking of any kind, it will not be merged. Ever.
+
 ## License
 
 MIT
