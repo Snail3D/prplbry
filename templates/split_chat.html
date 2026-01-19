@@ -123,6 +123,13 @@
             color: #888;
         }
 
+        .chat-title .home-link {
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
         /* Toggle Switch */
         .mode-toggle {
             position: relative;
@@ -838,8 +845,10 @@
     <div class="chat-section">
         <div class="chat-header">
             <div class="chat-title">
-                <span class="logo">🫐</span>
-                <span class="prpl">prpl</span><span class="berry">bry</span>
+                <a href="/" class="home-link">
+                    <span class="logo">🫐</span>
+                    <span class="prpl">prpl</span><span class="berry">bry</span>
+                </a>
             </div>
             <div class="mode-toggle" onclick="toggleMode()" id="modeBtn"></div>
         </div>
