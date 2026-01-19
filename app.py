@@ -255,7 +255,7 @@ app.config['UPLOAD_FOLDER'] = str(UPLOAD_FOLDER)
 limiter = Limiter(
     app=app,
     key_func=get_remote_address,
-    default_limits=["1000 per day", "100 per hour"],
+    default_limits=["10000 per day", "1000 per hour"],
     storage_uri="redis://localhost:6379",
     strategy="fixed-window"
 )
