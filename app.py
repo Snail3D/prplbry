@@ -446,13 +446,13 @@ def validate_tech_stack(tech_stack: str) -> Dict[str, Any]:
 
 @app.errorhandler(404)
 def not_found(error):
-    return render_template('base.html', content="<h1 style='color:#00ff00'>404 - NOT FOUND</h1>"), 404
+    return "<h1>404 - Not Found</h1>", 404
 
 
 @app.errorhandler(500)
 def server_error(error):
     logger.exception("Server error")
-    return render_template('base.html', content="<h1 style='color:#ff0000'>500 - SERVER ERROR</h1>"), 500
+    return "<h1>500 - Server Error</h1>", 500
 
 
 @app.errorhandler(429)
