@@ -188,11 +188,6 @@
             color: #fff;
             box-shadow: 0 1px 2px rgba(0,0,0,0.1);
             position: relative;
-            padding-right: 35px;
-        }
-
-        .message.user:hover .delete-btn {
-            opacity: 1;
         }
 
         .message.assistant {
@@ -201,53 +196,6 @@
             color: #fff;
             box-shadow: 0 1px 2px rgba(0,0,0,0.1);
             animation: orangeToPurple 5s ease-out forwards;
-        }
-
-        .delete-btn {
-            position: absolute;
-            top: 4px;
-            right: 4px;
-            width: 20px;
-            height: 20px;
-            background: rgba(255, 59, 48, 0.9);
-            border: none;
-            border-radius: 50%;
-            color: #fff;
-            font-size: 12px;
-            cursor: pointer;
-            opacity: 0;
-            transition: opacity 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            line-height: 1;
-        }
-
-        .delete-btn:hover {
-            background: rgb(255, 59, 48);
-        }
-
-        .priority-btn {
-            margin-top: 8px;
-            padding: 4px 12px;
-            background: rgba(255, 255, 255, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 12px;
-            color: #fff;
-            font-size: 11px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-align: center;
-        }
-
-        .priority-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
-        }
-
-        .priority-btn.high {
-            background: rgba(255, 59, 48, 0.8);
-            border-color: rgba(255, 59, 48, 1);
         }
 
         @keyframes orangeToPurple {
@@ -934,10 +882,6 @@
                 window.location.href = '/chat';
                 return;
             }
-
-            // Count existing user messages to set priority button correctly
-            const existingUserMessages = document.querySelectorAll('.message.user').length;
-            userMessageCount = existingUserMessages;
         });
 
         function generateUUID() {
@@ -1029,9 +973,6 @@
             document.getElementById('sendBtn').disabled = false;
         }
 
-        // Track user message count for priority button logic
-        let userMessageCount = 0;
-
         function addMessage(role, content, messageId = null) {
             const messagesDiv = document.getElementById('messages');
             const msgDiv = document.createElement('div');
@@ -1042,96 +983,8 @@
             contentDiv.innerHTML = content.replace(/\n/g, '<br>');
             msgDiv.appendChild(contentDiv);
 
-            // Add delete button to user messages
-            if (role === 'user') {
-                userMessageCount++;
-
-                const deleteBtn = document.createElement('button');
-                deleteBtn.className = 'delete-btn';
-                deleteBtn.innerHTML = '×';
-                deleteBtn.onclick = () => deleteMessage(msgDiv.dataset.messageId, msgDiv);
-                msgDiv.appendChild(deleteBtn);
-
-                // Add priority button to all user messages EXCEPT the first one (project description)
-                if (userMessageCount > 1) {
-                    const priorityBtn = document.createElement('button');
-                    priorityBtn.className = 'priority-btn';
-                    priorityBtn.innerHTML = 'Medium Priority';
-                    priorityBtn.dataset.priority = 'medium';
-                    priorityBtn.onclick = () => togglePriority(msgDiv.dataset.messageId, priorityBtn);
-                    msgDiv.appendChild(priorityBtn);
-                }
-            }
-
             messagesDiv.appendChild(msgDiv);
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
-        }
-
-        async function deleteMessage(messageId, msgDiv) {
-            if (!confirm('Remove this from PRD?')) return;
-
-            try {
-                const response = await fetch('/api/chat/delete', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        message_id: messageId,
-                        session_id: sessionId
-                    })
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    // Remove message from chat
-                    msgDiv.remove();
-
-                    // Update PRD display
-                    if (data.prd_preview) {
-                        document.getElementById('prdEditor').value = data.prd_preview;
-                    }
-                }
-            } catch (e) {
-                console.error('Delete failed:', e);
-            }
-        }
-
-        async function togglePriority(messageId, priorityBtn) {
-            const currentPriority = priorityBtn.dataset.priority;
-            const newPriority = currentPriority === 'medium' ? 'high' : 'medium';
-
-            try {
-                const response = await fetch('/api/chat/priority', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        message_id: messageId,
-                        session_id: sessionId,
-                        priority: newPriority
-                    })
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    // Update button state
-                    priorityBtn.dataset.priority = newPriority;
-                    if (newPriority === 'high') {
-                        priorityBtn.innerHTML = 'High Priority';
-                        priorityBtn.classList.add('high');
-                    } else {
-                        priorityBtn.innerHTML = 'Medium Priority';
-                        priorityBtn.classList.remove('high');
-                    }
-
-                    // Update PRD display
-                    if (data.prd_preview) {
-                        document.getElementById('prdEditor').value = data.prd_preview;
-                    }
-                }
-            } catch (e) {
-                console.error('Priority toggle failed:', e);
-            }
         }
 
         function addSuggestion(suggestion) {
