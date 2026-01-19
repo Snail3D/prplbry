@@ -1,118 +1,76 @@
-# 🍇 prplbry - Purple Berry PRD Creator
+# 🫐 prplbry
 
-Chat-based PRD creator. No AI API keys required - just conversation.
+Chat with Ralph. Build a PRD. Done.
 
-## Features
+*The hamster tastes like chicken.* — Hee hee.
 
-- 💬 **Chat interface** - Build your PRD through natural conversation with Ralph
-- 📋 **PRD restore** - Copy a PRD, paste it later, continue building
-- 🔄 **Fresh sessions** - Browser refresh = completely new start
-- 🎯 **Multi-stack support** - Python, Flask, Node, React, ESP32, Arduino, and more
-- 💾 **Copy-ready PRD** - Export in compressed format ready for Claude Code
-- 🔒 **Privacy-focused** - Nothing stored, nothing tracked
+---
 
-## 🎬 Video Tutorial
+## What It Does
 
-Watch the [YouTube playlist](https://www.youtube.com/playlist?list=PLJB4l6OZ0E3FvDzSlb6RZLNnB5CHcLu4S) for step-by-step guides:
+You chat. Ralph listens. PRD appears.
 
-[![Watch Tutorial](https://img.shields.io/badge/YouTube-Watch%20Tutorial-red?style=for-the-badge&logo=youtube)](https://www.youtube.com/playlist?list=PLJB4l6OZ0E3FvDzSlb6RZLNnB5CHcLu4S)
+Type what you're building. Ralph asks the right questions. Features get organized. Categories form. Tasks emerge. Export to Claude Code and you're building.
 
-## Quick Start
+That's the Ralph loop.
 
-### Use prplbry.com
-Visit https://prplbry.com and start building!
+---
 
-### Run Locally
+## How
+
+1. Go to **prplbry.com**
+2. Tell Ralph your idea
+3. Watch the PRD build itself
+4. Copy, paste into Claude Code
+
+*My cat's breath smells like cat food.* — Hee hee.
+
+---
+
+## Functions
+
+| What | How |
+|------|-----|
+| **Chat** | Natural conversation |
+| **Restore** | Paste any PRD, keep building |
+| **Export** | Claude Code ready |
+| **Privacy** | Zero storage, zero tracking |
+
+---
+
+## Privacy
+
+We store nothing.
+
+- No analytics
+- No tracking
+- no cookies that linger
+- No data sold
+- No logs kept
+
+Your PRD generates in real-time. Once you copy it, it's gone. Forever.
+
+---
+
+## Run It
 
 ```bash
-# Clone repo
 git clone https://github.com/Snail3D/prplbry.git
-cd prplbry
-
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Generate secret key
-python -c 'import secrets; print(secrets.token_urlsafe(32))'
-
-# Set environment variable (Linux/Mac)
-export SECRET_KEY=<your-key>
-
-# Set environment variable (Windows)
-set SECRET_KEY=<your-key>
-
-# Run the app
+cd prplbry && pip install -r requirements.txt
+export SECRET_KEY=$(python -c 'import secrets; print(secrets.token_urlsafe(32))')
 python app.py
 ```
 
-Visit http://localhost:8000
+Visit `localhost:8000`
 
-## How It Works
-
-1. Tell Ralph what you're building (one sentence)
-2. Add your tech stack (or say "I don't know")
-3. Describe features and requirements
-4. Export your PRD
-
-## PRD Format
-
-The exported PRD uses compressed keys for efficiency:
-
-```
-pn = project_name
-pd = project_description
-ts = tech_stack
-p  = prds (categories)
-t  = tasks
-```
-
-## Production Deployment
-
-```bash
-# Install dependencies
-pip install -r requirements.txt
-
-# Run with gunicorn (recommended)
-gunicorn -w 8 --threads 2 --bind 0.0.0.0:8000 app:app
-```
-
-Required environment variable:
-- `SECRET_KEY` - Generate with: `python -c 'import secrets; print(secrets.token_urlsafe(32))'`
-
-Optional (for Redis sessions/rate limiting):
-- `REDIS_URL` - Default: `redis://localhost:6379`
-
-## Architecture
-
-- **8 gunicorn workers** with 2 threads each = ~16 concurrent handlers
-- **Redis** for shared session storage and rate limiting
-- **Rate limiting**: 10000/day, 1000/hour per IP
-- Handles hundreds of concurrent users easily
+---
 
 ## Contributing
 
-Contributions are welcome, but please note:
+**No tracking. Ever.**
 
-**No tracking ever.**
+PRs adding analytics, telemetry, or surveillance will be rejected. This is non-negotiable.
 
-Pull requests that add any form of tracking, analytics, or user surveillance will be automatically rejected. This includes but is not limited to:
+---
 
-- Analytics scripts (Google Analytics, Plausible, Fathom, etc.)
-- Telemetry or data collection
-- User fingerprinting
-- Behavioral tracking
-- Third-party trackers
-
-If your contribution adds tracking of any kind, it will not be merged. Ever.
-
-## License
-
-MIT
-
-## Support
-
-https://buymeacoffee.com/snail3d
+MIT License • [Buy Me a Coffee](https://buymeacoffee.com/snail3d) • [YouTube](https://www.youtube.com/playlist?list=PLJB4l6OZ0E3FvDzSlb6RZLNnB5CHcLu4S)
